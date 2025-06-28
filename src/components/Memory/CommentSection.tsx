@@ -27,9 +27,24 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
     e.preventDefault();
     if (!newComment.trim() || !currentUser || isSubmitting) return;
 
+    const trimmedComment = newComment.trim();
+
+    // Client-side validation: Check if content looks like a UUID
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(trimmedComment)) {
+      toast.error('Comment content cannot be a UUID. Please enter a meaningful comment.');
+      return;
+    }
+
+    // Additional validation: prevent extremely short meaningless content
+    if (trimmedComment.length < 2) {
+      toast.error('Comment must be at least 2 characters long.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await onAddComment(newComment.trim());
+      await onAddComment(trimmedComment);
       setNewComment('');
     } finally {
       setIsSubmitting(false);
@@ -125,6 +140,7 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
                   placeholder="Add a comment..."
                   className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm min-w-0"
                   disabled={isSubmitting}
+                  maxLength={1000}
                 />
                 <motion.button
                   whileHover={{ scale: 1.02 }}

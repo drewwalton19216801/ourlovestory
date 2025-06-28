@@ -319,7 +319,7 @@ export function useMemories(publicOnly = false, authorId?: string) {
     }
   };
 
-  // Helper function to get user display name
+  // Helper function to get user display name with UUID protection
   const getUserDisplayName = async (userId: string): Promise<string> => {
     try {
       const { data: profile } = await supabase
@@ -328,8 +328,14 @@ export function useMemories(publicOnly = false, authorId?: string) {
         .eq('id', userId)
         .single();
       
-      // Return display_name if it exists and is not an email address
+      // Return display_name if it exists and is not a UUID or email address
       if (profile?.display_name) {
+        // Check if display_name is a UUID pattern
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidPattern.test(profile.display_name)) {
+          return 'Anonymous';
+        }
+        
         // Check if display_name looks like an email
         if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
           // Try to extract a better name from email
@@ -536,7 +542,7 @@ export function useSingleMemory(memoryId: string | undefined) {
     }
   };
 
-  // Helper function to get user display name
+  // Helper function to get user display name with UUID protection
   const getUserDisplayName = async (userId: string): Promise<string> => {
     try {
       const { data: profile } = await supabase
@@ -545,8 +551,14 @@ export function useSingleMemory(memoryId: string | undefined) {
         .eq('id', userId)
         .single();
       
-      // Return display_name if it exists and is not an email address
+      // Return display_name if it exists and is not a UUID or email address
       if (profile?.display_name) {
+        // Check if display_name is a UUID pattern
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidPattern.test(profile.display_name)) {
+          return 'Anonymous';
+        }
+        
         // Check if display_name looks like an email
         if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
           // Try to extract a better name from email

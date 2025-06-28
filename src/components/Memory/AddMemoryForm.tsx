@@ -35,7 +35,7 @@ const categories = [
   { value: 'everyday_joy', label: 'Everyday Joy', icon: Heart },
 ];
 
-// Helper function to get user display name
+// Helper function to get user display name with UUID protection
 const getUserDisplayName = async (userId: string): Promise<string> => {
   try {
     const { supabase } = await import('../../lib/supabase');
@@ -45,8 +45,14 @@ const getUserDisplayName = async (userId: string): Promise<string> => {
       .eq('id', userId)
       .single();
     
-    // Return display_name if it exists and is not an email address
+    // Return display_name if it exists and is not a UUID or email address
     if (profile?.display_name) {
+      // Check if display_name is a UUID pattern
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidPattern.test(profile.display_name)) {
+        return 'Anonymous';
+      }
+      
       // Check if display_name looks like an email
       if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
         // Try to extract a better name from email
@@ -94,7 +100,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
       // Use current date for the memory
       const currentDate = new Date().toISOString().split('T')[0];
       
-      // Get the author name from profile, ensuring it's not an email address
+      // Get the author name from profile, ensuring it's not a UUID or email address
       const authorName = await getUserDisplayName(user.id);
       
       // Upload images first if any are selected
