@@ -4,6 +4,7 @@ import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, U
 import { Memory } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
+import { AuthPromptModal } from '../UI/AuthPromptModal';
 import { format } from 'date-fns';
 import { CommentSection } from './CommentSection';
 import toast from 'react-hot-toast';
@@ -53,6 +54,8 @@ export function MemoryCard({
   const [showActions, setShowActions] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const [authPromptAction, setAuthPromptAction] = useState<'react' | 'comment' | 'interact'>('interact');
 
   const reactionCounts = {
     heart: memory.reactions?.filter(r => r.reaction_type === 'heart').length || 0,
@@ -66,7 +69,21 @@ export function MemoryCard({
   };
 
   const handleReaction = (type: 'heart' | 'smile' | 'celebration') => {
+    if (!user) {
+      setAuthPromptAction('react');
+      setAuthPromptOpen(true);
+      return;
+    }
     onReaction(memory.id, type);
+  };
+
+  const handleCommentsToggle = () => {
+    if (!user) {
+      setAuthPromptAction('comment');
+      setAuthPromptOpen(true);
+      return;
+    }
+    setShowComments(!showComments);
   };
 
   const canDeleteMemory = user && user.id === memory.author_id;
@@ -337,7 +354,7 @@ export function MemoryCard({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowComments(!showComments)}
+              onClick={handleCommentsToggle}
               className="flex items-center space-x-1 px-3 py-2 rounded-full bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
@@ -351,6 +368,7 @@ export function MemoryCard({
           {showComments && (
             <CommentSection
               comments={memory.comments || []}
+              currentUser={user}
               onAddComment={(content) => onComment(memory.id, content)}
               onDeleteComment={handleCommentDelete}
             />
@@ -395,6 +413,13 @@ export function MemoryCard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Authentication Prompt Modal */}
+      <AuthPromptModal
+        isOpen={authPromptOpen}
+        onClose={() => setAuthPromptOpen(false)}
+        action={authPromptAction}
+      />
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

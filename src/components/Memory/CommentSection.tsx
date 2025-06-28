@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Trash2 } from 'lucide-react';
+import { Send, Trash2, LogIn, UserPlus } from 'lucide-react';
 import { Comment } from '../../types';
-import { useAuth } from '../../contexts/AuthContext';
+import { User } from '@supabase/supabase-js';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 interface CommentSectionProps {
   comments: Comment[];
+  currentUser: User | null;
   onAddComment: (content: string) => void;
   onDeleteComment: (commentId: string) => void;
 }
 
-export function CommentSection({ comments, onAddComment, onDeleteComment }: CommentSectionProps) {
-  const { user } = useAuth();
+export function CommentSection({ comments, currentUser, onAddComment, onDeleteComment }: CommentSectionProps) {
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -23,7 +25,7 @@ export function CommentSection({ comments, onAddComment, onDeleteComment }: Comm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !user || isSubmitting) return;
+    if (!newComment.trim() || !currentUser || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -60,6 +62,10 @@ export function CommentSection({ comments, onAddComment, onDeleteComment }: Comm
     setCommentToDelete(null);
   };
 
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
+
   return (
     <>
       <motion.div
@@ -84,7 +90,7 @@ export function CommentSection({ comments, onAddComment, onDeleteComment }: Comm
                     <span className="text-xs text-gray-400">
                       {format(new Date(comment.created_at), 'MMM d, yyyy • HH:mm')}
                     </span>
-                    {user && user.id === comment.user_id && (
+                    {currentUser && currentUser.id === comment.user_id && (
                       <button
                         onClick={() => handleDeleteClick(comment.id)}
                         className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all ml-2"
@@ -100,12 +106,12 @@ export function CommentSection({ comments, onAddComment, onDeleteComment }: Comm
             ))}
           </div>
 
-          {/* Add Comment Form */}
-          {user && (
+          {/* Add Comment Form or Sign In Prompt */}
+          {currentUser ? (
             <form onSubmit={handleSubmit} className="flex space-x-3">
               <div className="flex-shrink-0 w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-purple-300">
-                  {(user.user_metadata?.name || user.email || '').charAt(0).toUpperCase()}
+                  {(currentUser.user_metadata?.name || currentUser.email || '').charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 flex space-x-2">
@@ -128,6 +134,32 @@ export function CommentSection({ comments, onAddComment, onDeleteComment }: Comm
                 </motion.button>
               </div>
             </form>
+          ) : (
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4">
+              <div className="text-center">
+                <p className="text-gray-300 mb-4">Sign in to join the conversation</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSignIn}
+                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Create Account</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSignIn}
+                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 transition-all border border-white/20"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Sign In</span>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </motion.div>
