@@ -27,6 +27,16 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
     e.preventDefault();
     if (!newComment.trim() || !currentUser || isSubmitting) return;
 
+    // DEBUG: Log the comment content before sending
+    console.log('[CommentSection] Submitting comment:', {
+      originalComment: newComment,
+      trimmedComment: newComment.trim(),
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      userName: currentUser.user_metadata?.name,
+      timestamp: new Date().toISOString()
+    });
+
     setIsSubmitting(true);
     try {
       await onAddComment(newComment.trim());
