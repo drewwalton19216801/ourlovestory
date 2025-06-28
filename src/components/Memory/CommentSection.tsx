@@ -74,7 +74,7 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
         exit={{ opacity: 0, height: 0 }}
         className="border-t border-white/10 bg-black/10"
       >
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Comments List */}
           <div className="space-y-4 mb-6">
             {comments.map((comment) => (
@@ -84,23 +84,23 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
                     {comment.user_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm font-medium text-white">{comment.user_name}</span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-sm font-medium text-white truncate">{comment.user_name}</span>
+                    <span className="text-xs text-gray-400 flex-shrink-0">
                       {format(new Date(comment.created_at), 'MMM d, yyyy • HH:mm')}
                     </span>
                     {currentUser && currentUser.id === comment.user_id && (
                       <button
                         onClick={() => handleDeleteClick(comment.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all ml-2"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all ml-2 flex-shrink-0"
                         title="Delete comment"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
                     )}
                   </div>
-                  <p className="text-gray-300 text-sm">{comment.content}</p>
+                  <p className="text-gray-300 text-sm break-words">{comment.content}</p>
                 </div>
               </div>
             ))}
@@ -108,27 +108,30 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
 
           {/* Add Comment Form or Sign In Prompt */}
           {currentUser ? (
-            <form onSubmit={handleSubmit} className="flex space-x-3">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+              {/* Avatar - Always visible */}
               <div className="flex-shrink-0 w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-purple-300">
                   {(currentUser.user_metadata?.name || currentUser.email || '').charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 flex space-x-2">
+              
+              {/* Input and Button Container */}
+              <div className="flex-1 flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm min-w-0"
                   disabled={isSubmitting}
                 />
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={!newComment.trim() || isSubmitting}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 self-start sm:self-auto"
                 >
                   <Send className="h-4 w-4" />
                 </motion.button>
