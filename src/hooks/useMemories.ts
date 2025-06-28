@@ -426,19 +426,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
       // Get the user's display name from their profile
       const userName = await getUserDisplayName(user.id);
 
-      // DEBUG: Log all the values being prepared for insertion
-      console.log('[useMemories.addComment] Preparing to insert comment:', {
-        memory_id: memoryId,
-        user_id: user.id,
-        content: content,
-        user_name: userName,
-        contentType: typeof content,
-        contentLength: content.length,
-        userIdType: typeof user.id,
-        userNameType: typeof userName,
-        timestamp: new Date().toISOString()
-      });
-
       const { data, error } = await supabase
         .from('comments')
         .insert([{
@@ -450,18 +437,7 @@ export function useMemories(publicOnly = false, authorId?: string) {
         .select()
         .single();
 
-      if (error) {
-        console.error('[useMemories.addComment] Supabase error:', error);
-        throw error;
-      }
-
-      // DEBUG: Log the returned data from Supabase
-      console.log('[useMemories.addComment] Comment inserted successfully:', {
-        returnedData: data,
-        returnedContent: data?.content,
-        returnedContentType: typeof data?.content,
-        timestamp: new Date().toISOString()
-      });
+      if (error) throw error;
 
       setMemories(prev => prev.map(memory => 
         memory.id === memoryId 
@@ -469,7 +445,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
           : memory
       ));
     } catch (err) {
-      console.error('[useMemories.addComment] Error:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to add comment');
     }
   };
@@ -646,19 +621,6 @@ export function useSingleMemory(memoryId: string | undefined) {
     try {
       const userName = await getUserDisplayName(user.id);
 
-      // DEBUG: Log all the values being prepared for insertion
-      console.log('[useSingleMemory.addComment] Preparing to insert comment:', {
-        memory_id: memory.id,
-        user_id: user.id,
-        content: content,
-        user_name: userName,
-        contentType: typeof content,
-        contentLength: content.length,
-        userIdType: typeof user.id,
-        userNameType: typeof userName,
-        timestamp: new Date().toISOString()
-      });
-
       const { data, error } = await supabase
         .from('comments')
         .insert([{
@@ -670,25 +632,13 @@ export function useSingleMemory(memoryId: string | undefined) {
         .select()
         .single();
 
-      if (error) {
-        console.error('[useSingleMemory.addComment] Supabase error:', error);
-        throw error;
-      }
-
-      // DEBUG: Log the returned data from Supabase
-      console.log('[useSingleMemory.addComment] Comment inserted successfully:', {
-        returnedData: data,
-        returnedContent: data?.content,
-        returnedContentType: typeof data?.content,
-        timestamp: new Date().toISOString()
-      });
+      if (error) throw error;
 
       setMemory(prev => prev ? { 
         ...prev, 
         comments: [...(prev.comments || []), data] 
       } : null);
     } catch (err) {
-      console.error('[useSingleMemory.addComment] Error:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to add comment');
     }
   };
