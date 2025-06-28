@@ -30,7 +30,7 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 overflow-x-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 overflow-hidden px-6 py-8">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
       </div>
     );
@@ -39,37 +39,39 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 overflow-x-hidden">
       <Navigation />
-      <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        <Routes>
-          <Route path="/" element={<Timeline />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/memory/:id" element={<SingleMemory />} />
-          <Route path="/profile/:userId" element={<Profile />} />
-          <Route
-            path="/add-memory"
-            element={
-              <ProtectedRoute>
-                <AddMemory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/edit-memory/:id"
-            element={
-              <ProtectedRoute>
-                <EditMemory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+      <main className="pt-28 pb-16 px-6 sm:px-8 lg:px-12 max-w-full">
+        <div className="mx-auto max-w-7xl">
+          <Routes>
+            <Route path="/" element={<Timeline />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/memory/:id" element={<SingleMemory />} />
+            <Route path="/profile/:userId" element={<Profile />} />
+            <Route
+              path="/add-memory"
+              element={
+                <ProtectedRoute>
+                  <AddMemory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-memory/:id"
+              element={
+                <ProtectedRoute>
+                  <EditMemory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
       </main>
       <Toaster
         position="top-right"
