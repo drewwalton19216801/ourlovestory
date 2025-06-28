@@ -154,119 +154,126 @@ export function MemoryCard({
         animate={{ opacity: 1, y: 0 }}
         className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden relative"
       >
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[memory.category as keyof typeof categoryColors]}`}>
+        <div className="p-4 sm:p-6">
+          {/* Header - Mobile-optimized layout */}
+          <div className="flex flex-col space-y-3 mb-4">
+            {/* Top Row: Category and Privacy */}
+            <div className="flex items-center justify-between">
+              <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${categoryColors[memory.category as keyof typeof categoryColors]}`}>
                 {categoryLabels[memory.category as keyof typeof categoryLabels]}
               </span>
-              <div className="flex items-center text-gray-400">
-                {memory.is_public ? (
-                  <Globe className="h-4 w-4" />
-                ) : (
-                  <Lock className="h-4 w-4" />
-                )}
+              
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center text-gray-400">
+                  {memory.is_public ? (
+                    <Globe className="h-4 w-4" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                </div>
+                
+                {/* Actions Menu */}
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowActions(!showActions)}
+                    className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {showActions && (
+                      <>
+                        {/* Backdrop for click outside */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowActions(false)}
+                        />
+                        
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="absolute right-0 top-full mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl z-50 min-w-[200px] overflow-hidden"
+                        >
+                          <motion.button
+                            whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
+                            onClick={handleCopyLink}
+                            className="flex items-center space-x-3 w-full px-4 py-3 text-left text-purple-400 hover:text-purple-300 transition-all"
+                          >
+                            <Link className="h-4 w-4" />
+                            <span className="font-medium">Copy Post Link</span>
+                          </motion.button>
+
+                          {showViewPostLink && (
+                            <motion.button
+                              whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+                              onClick={handleViewPost}
+                              className="flex items-center space-x-3 w-full px-4 py-3 text-left text-blue-400 hover:text-blue-300 transition-all"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              <span className="font-medium">View Full Post</span>
+                            </motion.button>
+                          )}
+
+                          {canDeleteMemory && (
+                            <>
+                              <div className="border-t border-white/10 my-1"></div>
+                              <motion.button
+                                whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                                onClick={handleDeleteClick}
+                                className="flex items-center space-x-3 w-full px-4 py-3 text-left text-red-400 hover:text-red-300 transition-all"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="font-medium">Delete Memory</span>
+                              </motion.button>
+                            </>
+                          )}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4 text-sm text-gray-400">
+            {/* Date/Time/Location Row - Mobile-friendly stacked layout */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-400">
                 <div className="flex items-center space-x-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{format(new Date(memory.created_at), 'MMM d, yyyy')}</span>
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">{format(new Date(memory.created_at), 'MMM d, yyyy')}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{format(new Date(memory.created_at), 'HH:mm')}</span>
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">{format(new Date(memory.created_at), 'HH:mm')}</span>
                 </div>
                 {memory.location && (
                   <div className="flex items-center space-x-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{memory.location}</span>
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">{memory.location}</span>
                   </div>
                 )}
-              </div>
-              
-              {/* Actions Menu */}
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowActions(!showActions)}
-                  className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </motion.button>
-                
-                <AnimatePresence>
-                  {showActions && (
-                    <>
-                      {/* Backdrop for click outside */}
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowActions(false)}
-                      />
-                      
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="absolute right-0 top-full mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl z-50 min-w-[200px] overflow-hidden"
-                      >
-                        <motion.button
-                          whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
-                          onClick={handleCopyLink}
-                          className="flex items-center space-x-3 w-full px-4 py-3 text-left text-purple-400 hover:text-purple-300 transition-all"
-                        >
-                          <Link className="h-4 w-4" />
-                          <span className="font-medium">Copy Post Link</span>
-                        </motion.button>
-
-                        {showViewPostLink && (
-                          <motion.button
-                            whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
-                            onClick={handleViewPost}
-                            className="flex items-center space-x-3 w-full px-4 py-3 text-left text-blue-400 hover:text-blue-300 transition-all"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="font-medium">View Full Post</span>
-                          </motion.button>
-                        )}
-
-                        {canDeleteMemory && (
-                          <>
-                            <div className="border-t border-white/10 my-1"></div>
-                            <motion.button
-                              whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-                              onClick={handleDeleteClick}
-                              className="flex items-center space-x-3 w-full px-4 py-3 text-left text-red-400 hover:text-red-300 transition-all"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="font-medium">Delete Memory</span>
-                            </motion.button>
-                          </>
-                        )}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
               </div>
             </div>
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-white mb-3">{memory.title}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 leading-tight">{memory.title}</h2>
 
           {/* Description */}
-          <p className="text-gray-300 mb-6 leading-relaxed">{memory.description}</p>
+          <p className="text-gray-300 mb-6 leading-relaxed text-sm sm:text-base">{memory.description}</p>
 
           {/* Participants */}
           {memory.participants && memory.participants.length > 0 && (
-            <div className="flex items-center space-x-2 mb-4">
-              <Users className="h-4 w-4 text-purple-400" />
-              <span className="text-sm text-gray-400">With:</span>
-              <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                <span className="text-sm text-gray-400">With:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {memory.participants.map((participant) => (
                   <span
                     key={participant.id}
@@ -299,55 +306,55 @@ export function MemoryCard({
             </div>
           )}
 
-          {/* Author */}
-          <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-            <span>By {memory.author_name}</span>
-            <span>Posted {format(new Date(memory.created_at), 'MMM d, yyyy \'at\' HH:mm')}</span>
+          {/* Author - Mobile-optimized layout */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-400 mb-4 gap-2">
+            <span className="truncate">By {memory.author_name}</span>
+            <span className="text-xs sm:text-sm">Posted {format(new Date(memory.created_at), 'MMM d, yyyy \'at\' HH:mm')}</span>
           </div>
 
-          {/* Reactions */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
-            <div className="flex items-center space-x-2">
+          {/* Reactions - Mobile-optimized layout */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-white/10 gap-4">
+            <div className="flex items-center justify-center sm:justify-start space-x-2 overflow-x-auto">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleReaction('heart')}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('heart')
                     ? 'bg-red-500/20 text-red-400'
                     : 'bg-white/10 text-gray-400 hover:bg-red-500/20 hover:text-red-400'
                 }`}
               >
                 <Heart className="h-4 w-4" />
-                <span>{reactionCounts.heart}</span>
+                <span className="text-sm">{reactionCounts.heart}</span>
               </motion.button>
 
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleReaction('smile')}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('smile')
                     ? 'bg-yellow-500/20 text-yellow-400'
                     : 'bg-white/10 text-gray-400 hover:bg-yellow-500/20 hover:text-yellow-400'
                 }`}
               >
                 <Smile className="h-4 w-4" />
-                <span>{reactionCounts.smile}</span>
+                <span className="text-sm">{reactionCounts.smile}</span>
               </motion.button>
 
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleReaction('celebration')}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('celebration')
                     ? 'bg-purple-500/20 text-purple-400'
                     : 'bg-white/10 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400'
                 }`}
               >
                 <Sparkles className="h-4 w-4" />
-                <span>{reactionCounts.celebration}</span>
+                <span className="text-sm">{reactionCounts.celebration}</span>
               </motion.button>
             </div>
 
@@ -355,10 +362,10 @@ export function MemoryCard({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleCommentsToggle}
-              className="flex items-center space-x-1 px-3 py-2 rounded-full bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white transition-colors"
+              className="flex items-center justify-center space-x-1 px-3 py-2 rounded-full bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white transition-colors flex-shrink-0"
             >
               <MessageCircle className="h-4 w-4" />
-              <span>{memory.comments?.length || 0}</span>
+              <span className="text-sm">{memory.comments?.length || 0}</span>
             </motion.button>
           </div>
         </div>
