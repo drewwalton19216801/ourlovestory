@@ -65,6 +65,47 @@ export function useMemories(publicOnly = false) {
     }
   };
 
+  const fetchMemory = async (memoryId: string): Promise<Memory | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('memories')
+        .select(`
+          *,
+          reactions(*),
+          comments(*),
+          participants:memory_participants(*)
+        `)
+        .eq('id', memoryId)
+        .single();
+
+      if (error) {
+        // Handle the case where foreign key relationships don't exist yet
+        if (error.code === 'PGRST200' && error.message.includes('relationship')) {
+          const { data: simpleData, error: simpleError } = await supabase
+            .from('memories')
+            .select('*')
+            .eq('id', memoryId)
+            .single();
+
+          if (simpleError) throw simpleError;
+
+          return {
+            ...simpleData,
+            reactions: [],
+            comments: [],
+            participants: []
+          };
+        }
+        throw error;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching memory:', err);
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch memory');
+    }
+  };
+
   const addMemory = async (memory: Omit<Memory, 'id' | 'created_at' | 'updated_at' | 'reactions' | 'comments'>) => {
     try {
       const { data, error } = await supabase
@@ -297,6 +338,179 @@ export function useMemories(publicOnly = false) {
     toggleReaction,
     addComment,
     deleteComment,
+    fetchMemory,
     refetch: fetchMemories,
+  };
+}
+
+export function useSingleMemory(memoryId: string | undefined) {
+  const [memory, setMemory] = useState<Memory | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const fetchMemory = async () => {
+    if (!memoryId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
+        .from('memories')
+        .select(`
+          *,
+          reactions(*),
+          comments(*),
+          participants:memory_participants(*)
+        `)
+        .eq('id', memoryId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          setError('Memory not found');
+          return;
+        }
+        throw error;
+      }
+
+      setMemory(data);
+    } catch (err) {
+      console.error('Error fetching memory:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch memory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to get user display name
+  const getUserDisplayName = async (userId: string): Promise<string> => {
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+      
+      return profile?.display_name || 'Anonymous';
+    } catch {
+      return 'Anonymous';
+    }
+  };
+
+  const toggleReaction = async (reactionType: 'heart' | 'smile' | 'celebration') => {
+    if (!user || !memory) return;
+
+    const hasReacted = memory.reactions?.some(r => r.user_id === user.id && r.reaction_type === reactionType);
+
+    try {
+      if (hasReacted) {
+        // Remove reaction
+        const { error } = await supabase
+          .from('reactions')
+          .delete()
+          .eq('memory_id', memory.id)
+          .eq('user_id', user.id)
+          .eq('reaction_type', reactionType);
+
+        if (error) throw error;
+
+        setMemory(prev => prev ? { 
+          ...prev, 
+          reactions: (prev.reactions || []).filter(r => 
+            !(r.user_id === user.id && r.reaction_type === reactionType)
+          )
+        } : null);
+      } else {
+        // Add reaction
+        const userName = await getUserDisplayName(user.id);
+
+        const { data, error } = await supabase
+          .from('reactions')
+          .insert([{
+            memory_id: memory.id,
+            user_id: user.id,
+            reaction_type: reactionType,
+            user_name: userName
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setMemory(prev => prev ? { 
+          ...prev, 
+          reactions: [...(prev.reactions || []), data] 
+        } : null);
+      }
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to toggle reaction');
+    }
+  };
+
+  const addComment = async (content: string) => {
+    if (!user || !memory) return;
+
+    try {
+      const userName = await getUserDisplayName(user.id);
+
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([{
+          memory_id: memory.id,
+          user_id: user.id,
+          content,
+          user_name: userName
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setMemory(prev => prev ? { 
+        ...prev, 
+        comments: [...(prev.comments || []), data] 
+      } : null);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to add comment');
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!memory) return;
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      setMemory(prev => prev ? { 
+        ...prev, 
+        comments: (prev.comments || []).filter(c => c.id !== commentId)
+      } : null);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete comment');
+    }
+  };
+
+  useEffect(() => {
+    fetchMemory();
+  }, [memoryId, user]);
+
+  return {
+    memory,
+    loading,
+    error,
+    toggleReaction,
+    addComment,
+    deleteComment,
+    refetch: fetchMemory,
   };
 }

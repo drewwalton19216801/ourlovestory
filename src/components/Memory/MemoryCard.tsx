@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock } from 'lucide-react';
+import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink } from 'lucide-react';
 import { Memory } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
@@ -14,6 +14,7 @@ interface MemoryCardProps {
   onComment: (memoryId: string, content: string) => void;
   onDeleteMemory: (memoryId: string) => void;
   onDeleteComment: (memoryId: string, commentId: string) => void;
+  showViewPostLink?: boolean;
 }
 
 const categoryLabels = {
@@ -38,7 +39,14 @@ const categoryColors = {
   everyday_joy: 'bg-orange-500/20 text-orange-300',
 };
 
-export function MemoryCard({ memory, onReaction, onComment, onDeleteMemory, onDeleteComment }: MemoryCardProps) {
+export function MemoryCard({ 
+  memory, 
+  onReaction, 
+  onComment, 
+  onDeleteMemory, 
+  onDeleteComment,
+  showViewPostLink = true 
+}: MemoryCardProps) {
   const { user } = useAuth();
   const [showComments, setShowComments] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -65,6 +73,35 @@ export function MemoryCard({ memory, onReaction, onComment, onDeleteMemory, onDe
 
   const handleDeleteClick = () => {
     setDeleteModalOpen(true);
+    setShowActions(false);
+  };
+
+  const handleCopyLink = async () => {
+    const memoryUrl = `${window.location.origin}/memory/${memory.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(memoryUrl);
+      toast.success('Memory link copied to clipboard!');
+      setShowActions(false);
+    } catch (err) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = memoryUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast.success('Memory link copied to clipboard!');
+      } catch (fallbackErr) {
+        toast.error('Failed to copy link');
+      }
+      document.body.removeChild(textArea);
+      setShowActions(false);
+    }
+  };
+
+  const handleViewPost = () => {
+    window.open(`/memory/${memory.id}`, '_blank');
     setShowActions(false);
   };
 
@@ -131,46 +168,69 @@ export function MemoryCard({ memory, onReaction, onComment, onDeleteMemory, onDe
               </div>
               
               {/* Actions Menu */}
-              {canDeleteMemory && (
-                <div className="relative">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowActions(!showActions)}
-                    className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </motion.button>
-                  
-                  <AnimatePresence>
-                    {showActions && (
-                      <>
-                        {/* Backdrop for click outside */}
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowActions(false)}
-                        />
-                        
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          className="absolute right-0 top-full mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl z-50 min-w-[180px] overflow-hidden"
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowActions(!showActions)}
+                  className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </motion.button>
+                
+                <AnimatePresence>
+                  {showActions && (
+                    <>
+                      {/* Backdrop for click outside */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowActions(false)}
+                      />
+                      
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        className="absolute right-0 top-full mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl z-50 min-w-[200px] overflow-hidden"
+                      >
+                        <motion.button
+                          whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
+                          onClick={handleCopyLink}
+                          className="flex items-center space-x-3 w-full px-4 py-3 text-left text-purple-400 hover:text-purple-300 transition-all"
                         >
+                          <Link className="h-4 w-4" />
+                          <span className="font-medium">Copy Post Link</span>
+                        </motion.button>
+
+                        {showViewPostLink && (
                           <motion.button
-                            whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-                            onClick={handleDeleteClick}
-                            className="flex items-center space-x-3 w-full px-4 py-3 text-left text-red-400 hover:text-red-300 transition-all"
+                            whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+                            onClick={handleViewPost}
+                            className="flex items-center space-x-3 w-full px-4 py-3 text-left text-blue-400 hover:text-blue-300 transition-all"
                           >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="font-medium">Delete Memory</span>
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="font-medium">View Full Post</span>
                           </motion.button>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                        )}
+
+                        {canDeleteMemory && (
+                          <>
+                            <div className="border-t border-white/10 my-1"></div>
+                            <motion.button
+                              whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                              onClick={handleDeleteClick}
+                              className="flex items-center space-x-3 w-full px-4 py-3 text-left text-red-400 hover:text-red-300 transition-all"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="font-medium">Delete Memory</span>
+                            </motion.button>
+                          </>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 

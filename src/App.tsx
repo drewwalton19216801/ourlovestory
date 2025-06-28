@@ -7,6 +7,7 @@ import { Timeline } from './pages/Timeline';
 import { AddMemory } from './pages/AddMemory';
 import { Settings } from './pages/Settings';
 import { Auth } from './pages/Auth';
+import { SingleMemory } from './pages/SingleMemory';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Timeline />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/memory/:id" element={<SingleMemory />} />
           <Route
             path="/add-memory"
             element={
