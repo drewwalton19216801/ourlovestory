@@ -13,12 +13,22 @@ export interface UploadError {
 /**
  * Upload a file to Supabase Storage
  */
-export async function uploadImage(file: File): Promise<UploadResult> {
+export async function uploadImage(file: File, userId?: string): Promise<UploadResult> {
   try {
+    // Get current user if userId not provided
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be authenticated to upload images');
+      }
+      userId = user.id;
+    }
+
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-    const filePath = `memory-images/${fileName}`;
+    // Include user ID in path for RLS policies to work correctly
+    const filePath = `${userId}/${fileName}`;
 
     // Upload file to Supabase Storage
     const { data, error } = await supabase.storage
@@ -50,9 +60,18 @@ export async function uploadImage(file: File): Promise<UploadResult> {
 /**
  * Upload multiple files to Supabase Storage
  */
-export async function uploadImages(files: File[]): Promise<UploadResult[]> {
+export async function uploadImages(files: File[], userId?: string): Promise<UploadResult[]> {
   try {
-    const uploadPromises = files.map(file => uploadImage(file));
+    // Get current user if userId not provided
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be authenticated to upload images');
+      }
+      userId = user.id;
+    }
+
+    const uploadPromises = files.map(file => uploadImage(file, userId));
     const results = await Promise.all(uploadPromises);
     return results;
   } catch (error) {

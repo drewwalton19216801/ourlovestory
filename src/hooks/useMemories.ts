@@ -144,17 +144,35 @@ export function useMemories(publicOnly = false) {
     }
   };
 
+  // Helper function to get user display name
+  const getUserDisplayName = async (userId: string): Promise<string> => {
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+      
+      return profile?.display_name || 'Anonymous';
+    } catch {
+      return 'Anonymous';
+    }
+  };
+
   const addReaction = async (memoryId: string, reactionType: 'heart' | 'smile' | 'celebration') => {
     if (!user) return;
 
     try {
+      // Get the user's display name from their profile
+      const userName = await getUserDisplayName(user.id);
+
       const { data, error } = await supabase
         .from('reactions')
         .insert([{
           memory_id: memoryId,
           user_id: user.id,
           reaction_type: reactionType,
-          user_name: user.user_metadata?.name || 'Anonymous'
+          user_name: userName
         }])
         .select()
         .single();
@@ -216,13 +234,16 @@ export function useMemories(publicOnly = false) {
     if (!user) return;
 
     try {
+      // Get the user's display name from their profile
+      const userName = await getUserDisplayName(user.id);
+
       const { data, error } = await supabase
         .from('comments')
         .insert([{
           memory_id: memoryId,
           user_id: user.id,
           content,
-          user_name: user.user_metadata?.name || 'Anonymous'
+          user_name: userName
         }])
         .select()
         .single();
