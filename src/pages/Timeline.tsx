@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, Calendar, MapPin } from 'lucide-react';
+import { Filter, Calendar, MapPin, Heart } from 'lucide-react';
 import { MemoryCard } from '../components/Memory/MemoryCard';
 import { MemoryCardSkeleton } from '../components/Layout/LoadingSkeleton';
 import { HeroSection } from '../components/Marketing/HeroSection';
@@ -44,15 +44,37 @@ export function Timeline() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Hero Section */}
-      <HeroSection user={user} loading={loading} />
+      {/* Hero Section - only show for non-authenticated users */}
+      {!user && <HeroSection user={user} loading={loading} />}
+
+      {/* Header for authenticated users */}
+      {user && (
+        <div className="text-center mb-12">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4"
+          >
+            <Heart className="inline-block h-10 w-10 lg:h-12 lg:w-12 text-pink-400 mr-4" fill="currentColor" />
+            Your Love Story Timeline
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-lg lg:text-xl text-gray-300"
+          >
+            Celebrate your beautiful moments and memories together
+          </motion.p>
+        </div>
+      )}
 
       {/* Filters - only show if there are memories or user is authenticated */}
       {(memories.length > 0 || user) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: user ? 0.3 : 0.3 }}
           className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 p-6 mb-8"
         >
           <div className="flex items-center space-x-4 mb-4">
