@@ -42,7 +42,10 @@ export function useRelationships() {
       }));
 
       const accepted = relationshipsWithPartnerInfo.filter(r => r.status === 'accepted');
-      const pending = relationshipsWithPartnerInfo.filter(r => r.status === 'pending');
+      // Only show pending requests where the current user is the RECEIVER
+      const pending = relationshipsWithPartnerInfo.filter(r => 
+        r.status === 'pending' && r.receiver_id === user.id
+      );
 
       setRelationships(accepted);
       setPendingRequests(pending);
@@ -163,16 +166,51 @@ export function useRelationships() {
   };
 
   const respondToRequest = async (relationshipId: string, accept: boolean) => {
+    if (!user) {
+      throw new Error('User must be authenticated to respond to requests');
+    }
+
     try {
+      // First, verify that the current user is the receiver of this request
+      const { data: relationship, error: fetchError } = await supabase
+        .from('relationships')
+        .select('receiver_id, status')
+        .eq('id', relationshipId)
+        .single();
+
+      if (fetchError) {
+        throw new Error('Failed to find relationship request');
+      }
+
+      if (!relationship) {
+        throw new Error('Relationship request not found');
+      }
+
+      if (relationship.receiver_id !== user.id) {
+        throw new Error('You can only respond to requests sent to you');
+      }
+
+      if (relationship.status !== 'pending') {
+        throw new Error('This request has already been responded to');
+      }
+
+      // Update the relationship status
       const { error } = await supabase
         .from('relationships')
         .update({ 
           status: accept ? 'accepted' : 'declined',
           updated_at: new Date().toISOString()
         })
-        .eq('id', relationshipId);
+        .eq('id', relationshipId)
+        .eq('receiver_id', user.id) // Double-check security
+        .eq('status', 'pending'); // Only update if still pending
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new Error('Request not found or you do not have permission to respond to it');
+        }
+        throw error;
+      }
 
       await fetchRelationships();
     } catch (err) {
@@ -181,13 +219,22 @@ export function useRelationships() {
   };
 
   const removeRelationship = async (relationshipId: string) => {
+    if (!user) {
+      throw new Error('User must be authenticated to remove relationships');
+    }
+
     try {
       const { error } = await supabase
         .from('relationships')
         .delete()
         .eq('id', relationshipId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new Error('Relationship not found or you do not have permission to remove it');
+        }
+        throw error;
+      }
 
       await fetchRelationships();
     } catch (err) {
@@ -196,16 +243,32 @@ export function useRelationships() {
   };
 
   const updateRelationship = async (relationshipId: string, updates: Partial<Relationship>) => {
+    if (!user) {
+      throw new Error('User must be authenticated to update relationships');
+    }
+
     try {
+      // Only allow updating non-status fields for accepted relationships
+      const allowedUpdates = { ...updates };
+      delete allowedUpdates.status; // Never allow direct status updates
+      delete allowedUpdates.requester_id; // Never allow changing parties
+      delete allowedUpdates.receiver_id;
+
       const { error } = await supabase
         .from('relationships')
         .update({
-          ...updates,
+          ...allowedUpdates,
           updated_at: new Date().toISOString()
         })
-        .eq('id', relationshipId);
+        .eq('id', relationshipId)
+        .eq('status', 'accepted'); // Only allow updates to accepted relationships
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new Error('Relationship not found or cannot be updated');
+        }
+        throw error;
+      }
 
       await fetchRelationships();
     } catch (err) {
