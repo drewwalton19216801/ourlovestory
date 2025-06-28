@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink } from 'lucide-react';
+import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink, X } from 'lucide-react';
 import { Memory } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
@@ -124,6 +124,10 @@ export function MemoryCard({
 
   const handleCommentDelete = (commentId: string) => {
     onDeleteComment(memory.id, commentId);
+  };
+
+  const closeImageModal = () => {
+    setSelectedImage(null);
   };
 
   return (
@@ -361,16 +365,31 @@ export function MemoryCard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={closeImageModal}
           >
+            {/* Close Button */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 z-60 w-12 h-12 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center border border-white/20 hover:bg-black/70 transition-all shadow-lg"
+              aria-label="Close image"
+            >
+              <X className="h-6 w-6" />
+            </motion.button>
+
+            {/* Image */}
             <motion.img
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
               src={selectedImage}
               alt="Memory"
-              className="max-w-4xl max-h-4xl object-contain rounded-lg"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           </motion.div>
