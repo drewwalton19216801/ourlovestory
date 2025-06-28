@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Relationship, UserProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { generateRelationshipRequestEmail } from '../lib/emailTemplates';
 
 export function useRelationships() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
@@ -52,17 +53,97 @@ export function useRelationships() {
     }
   };
 
+  const sendNotificationEmail = async (receiverId: string, requesterName: string, relationshipType: string) => {
+    try {
+      // Get receiver's email
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(receiverId);
+      
+      if (userError || !userData.user) {
+        console.warn('Could not fetch user email for notification:', userError);
+        return; // Don't fail the relationship request if email fails
+      }
+
+      // Get receiver's display name
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', receiverId)
+        .single();
+
+      const receiverName = profile?.display_name || userData.user.email || 'there';
+      const appUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      
+      const emailHtml = generateRelationshipRequestEmail({
+        receiverName,
+        requesterName,
+        relationshipType,
+        appUrl,
+        siteName: 'Our Love Story'
+      });
+
+      const emailApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email-resend`;
+      
+      const response = await fetch(emailApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: userData.user.email,
+          subject: `${requesterName} wants to connect with you on Our Love Story`,
+          html: emailHtml
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Failed to send notification email:', errorData);
+        // Don't throw - we don't want to fail the relationship request if email fails
+      }
+    } catch (error) {
+      console.warn('Error sending notification email:', error);
+      // Don't throw - we don't want to fail the relationship request if email fails
+    }
+  };
+
   const sendRelationshipRequest = async (receiverEmail: string, relationshipType: string = 'romantic') => {
     if (!user) return;
 
     try {
-      // First, find the user by email (this would require a function or different approach)
-      // For now, we'll assume we have the receiver_id
+      // First, find the user by email using the edge function
+      const findUserApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/find-user`;
+      
+      const findResponse = await fetch(findUserApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: receiverEmail }),
+      });
+
+      const findResult = await findResponse.json();
+      
+      if (!findResponse.ok || !findResult.user) {
+        throw new Error(findResult.error || 'User not found. Please check the email address.');
+      }
+
+      // Get requester's display name for the notification
+      const { data: requesterProfile } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const requesterName = requesterProfile?.display_name || user.email || 'Someone';
+
+      // Send the relationship request
       const { data, error } = await supabase
         .from('relationships')
         .insert([{
           requester_id: user.id,
-          receiver_id: receiverEmail, // This should be receiver_id in actual implementation
+          receiver_id: findResult.user.id,
           relationship_type: relationshipType,
           status: 'pending'
         }])
@@ -70,6 +151,9 @@ export function useRelationships() {
         .single();
 
       if (error) throw error;
+
+      // Send notification email (don't await to avoid blocking)
+      sendNotificationEmail(findResult.user.id, requesterName, relationshipType);
 
       await fetchRelationships();
       return data;

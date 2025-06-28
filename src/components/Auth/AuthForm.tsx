@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Heart, Mail, Lock, User } from 'lucide-react';
+import { Heart, Mail, Lock, User, RefreshCw, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -16,60 +16,76 @@ interface AuthFormData {
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const { signIn, signUp, resendVerification } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<AuthFormData>();
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<AuthFormData>();
+
+  const email = watch('email');
+
+  // Check if user just verified their email
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      toast.success('Email verified successfully! You can now sign in.');
+    }
+  }, [searchParams]);
 
   const onSubmit = async (data: AuthFormData) => {
     setIsSubmitting(true);
+    setShowResendVerification(false);
+    
     try {
       if (isSignUp) {
-        // Create the account first
-        await signUp(data.email, data.password);
-        
-        // Get the current user after signup
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError) {
-          console.error('Error getting user after signup:', userError);
-        } else if (user && data.name) {
-          // Update the user profile with the provided name
-          try {
-            const { error: profileError } = await supabase
-              .from('user_profiles')
-              .upsert({
-                id: user.id,
-                display_name: data.name,
-                updated_at: new Date().toISOString()
-              });
-            
-            if (profileError) {
-              console.error('Error updating profile:', profileError);
-              // Don't throw error as the account was created successfully
-            }
-          } catch (profileErr) {
-            console.error('Profile update failed:', profileErr);
-            // Don't throw error as the account was created successfully
-          }
-        }
-        
-        toast.success('Account created successfully! You can now start adding memories.');
-        navigate('/');
+        await signUp(data.email, data.password, data.name || '');
+        // Success message is shown in signUp function
+        // User stays on auth page to sign in after verification
       } else {
         await signIn(data.email, data.password);
         toast.success('Welcome back!');
         navigate('/');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Authentication failed');
+      console.error('Auth error:', error);
+      
+      if (error.message?.includes('verify your email')) {
+        setShowResendVerification(true);
+        toast.error(error.message);
+      } else if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please check your credentials and try again.');
+      } else if (error.message?.includes('Email not confirmed')) {
+        setShowResendVerification(true);
+        toast.error('Please verify your email address before signing in.');
+      } else {
+        toast.error(error.message || 'Authentication failed');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error('Please enter your email address first.');
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      await resendVerification(email);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to resend verification email');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
+    setShowResendVerification(false);
     reset();
   };
 
@@ -160,6 +176,58 @@ export function AuthForm() {
             )}
           </div>
 
+          {/* Email Verification Notice */}
+          {isSignUp && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <Mail className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-blue-300 font-medium mb-1">Email Verification Required</p>
+                  <p className="text-blue-200/80 text-xs leading-relaxed">
+                    After creating your account, you'll receive a verification email. 
+                    Please click the link in that email to activate your account before signing in.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resend Verification */}
+          {showResendVerification && !isSignUp && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+              <div className="flex items-start space-x-2 mb-3">
+                <Mail className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-yellow-300 font-medium mb-1">Email Verification Required</p>
+                  <p className="text-yellow-200/80 text-xs leading-relaxed">
+                    Your email address needs to be verified before you can sign in.
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResending || !email}
+                className="w-full py-2 bg-yellow-600/20 text-yellow-300 font-medium rounded-lg hover:bg-yellow-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm border border-yellow-500/30 flex items-center justify-center space-x-2"
+              >
+                {isResending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4" />
+                    <span>Resend Verification Email</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
+          )}
+
+          {/* Welcome message for new users */}
           {isSignUp && (
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
               <div className="flex items-start space-x-2">
