@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Memory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { deleteImages, extractStoragePath } from '../lib/storage';
 
 export function useMemories(publicOnly = false) {
   const [memories, setMemories] = useState<Memory[]>([]);
@@ -110,12 +111,32 @@ export function useMemories(publicOnly = false) {
 
   const deleteMemory = async (memoryId: string) => {
     try {
+      // First, get the memory to extract image paths for deletion
+      const memory = memories.find(m => m.id === memoryId);
+      
+      // Delete the memory from database (this will cascade delete reactions, comments, etc.)
       const { error } = await supabase
         .from('memories')
         .delete()
         .eq('id', memoryId);
 
       if (error) throw error;
+
+      // Delete associated images from storage
+      if (memory?.images && memory.images.length > 0) {
+        try {
+          const imagePaths = memory.images
+            .map(url => extractStoragePath(url))
+            .filter(path => path !== null) as string[];
+          
+          if (imagePaths.length > 0) {
+            await deleteImages(imagePaths);
+          }
+        } catch (imageError) {
+          console.warn('Failed to delete some images from storage:', imageError);
+          // Don't throw here as the memory was already deleted from the database
+        }
+      }
 
       setMemories(prev => prev.filter(memory => memory.id !== memoryId));
     } catch (err) {

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { MapPin, Image, Globe, Lock, Heart } from 'lucide-react';
+import { MapPin, Globe, Lock, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { useRelationships } from '../../hooks/useRelationships';
 import { Memory, MemoryCategory } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { PartnerSelector } from './PartnerSelector';
+import { ImageUpload } from './ImageUpload';
 import toast from 'react-hot-toast';
 
 interface AddMemoryFormProps {
@@ -20,7 +21,6 @@ interface FormData {
   location: string;
   category: MemoryCategory;
   is_public: boolean;
-  images: string[];
 }
 
 const categories = [
@@ -54,17 +54,6 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
   });
 
   const isPublic = watch('is_public');
-
-  const handleAddImage = () => {
-    const url = prompt('Enter image URL:');
-    if (url && url.trim()) {
-      setImageUrls(prev => [...prev, url.trim()]);
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
-  };
 
   const onSubmit = async (data: FormData) => {
     if (!user) return;
@@ -115,6 +104,10 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImagesUploaded = (newImageUrls: string[]) => {
+    setImageUrls(newImageUrls);
   };
 
   return (
@@ -217,34 +210,16 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
             disabled={isSubmitting}
           />
 
-          {/* Images */}
+          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-3">
-              <Image className="inline h-4 w-4 mr-1" />
               Images
             </label>
-            <div className="space-y-3">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                  <img src={url} alt={`Preview ${index + 1}`} className="w-16 h-16 object-cover rounded" />
-                  <span className="flex-1 text-sm text-gray-300 truncate">{url}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddImage}
-                className="w-full py-3 border-2 border-dashed border-white/20 rounded-lg text-gray-400 hover:border-white/40 hover:text-white transition-colors"
-              >
-                + Add Image URL
-              </button>
-            </div>
+            <ImageUpload
+              onImagesUploaded={handleImagesUploaded}
+              existingImages={imageUrls}
+              disabled={isSubmitting}
+            />
           </div>
 
           {/* Privacy */}
