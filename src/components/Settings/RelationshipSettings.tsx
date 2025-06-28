@@ -150,7 +150,7 @@ export function RelationshipSettings() {
   return (
     <>
       <div className="space-y-6">
-        <div>
+        <div className="hidden lg:block">
           <h2 className="text-xl font-semibold text-white mb-2">Relationship Settings</h2>
           <p className="text-gray-400 mb-6">Connect with partners and friends to share memories together</p>
         </div>
@@ -159,11 +159,11 @@ export function RelationshipSettings() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 rounded-lg p-6 border border-white/10"
+          className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
         >
           <div className="flex items-center space-x-3 mb-4">
             <UserPlus className="h-5 w-5 text-purple-400" />
-            <h3 className="text-lg font-medium text-white">Send Relationship Request</h3>
+            <h3 className="text-base sm:text-lg font-medium text-white">Send Relationship Request</h3>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -181,7 +181,7 @@ export function RelationshipSettings() {
                   }
                 })}
                 type="email"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 placeholder="Enter their email address"
               />
               {errors.email && (
@@ -193,7 +193,7 @@ export function RelationshipSettings() {
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Relationship Type
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {relationshipTypes.map((type) => {
                   const Icon = type.icon;
                   return (
@@ -220,7 +220,7 @@ export function RelationshipSettings() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
             >
               {isSubmitting ? 'Sending Request...' : 'Send Request'}
             </motion.button>
@@ -233,12 +233,12 @@ export function RelationshipSettings() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white/5 rounded-lg p-6 border border-white/10"
+            className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
           >
-            <h3 className="text-lg font-medium text-white mb-4">Pending Requests</h3>
+            <h3 className="text-base sm:text-lg font-medium text-white mb-4">Pending Requests</h3>
             <div className="space-y-3">
               {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white/5 rounded-lg gap-3">
                   <div>
                     <p className="text-white font-medium">{request.partner_name}</p>
                     <p className="text-sm text-gray-400 capitalize">
@@ -275,14 +275,14 @@ export function RelationshipSettings() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/5 rounded-lg p-6 border border-white/10"
+            className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
           >
-            <h3 className="text-lg font-medium text-white mb-4">Connected Partners</h3>
+            <h3 className="text-base sm:text-lg font-medium text-white mb-4">Connected Partners</h3>
             <div className="space-y-3">
               {relationships.map((relationship) => (
-                <div key={relationship.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                <div key={relationship.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white/5 rounded-lg gap-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium text-purple-300">
                         {relationship.partner_name?.charAt(0).toUpperCase() || '?'}
                       </span>
@@ -299,7 +299,7 @@ export function RelationshipSettings() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleDeleteClick(relationship.id)}
-                    className="p-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors"
+                    className="p-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors self-end sm:self-center"
                     title="Remove relationship"
                   >
                     <Trash2 className="h-4 w-4" />

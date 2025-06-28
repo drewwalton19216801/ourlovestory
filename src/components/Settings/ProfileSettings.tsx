@@ -74,7 +74,7 @@ export function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden lg:block">
         <h2 className="text-xl font-semibold text-white mb-2">Profile Settings</h2>
         <p className="text-gray-400 mb-6">Manage your profile information and how others see you</p>
       </div>
@@ -85,14 +85,14 @@ export function ProfileSettings() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/5 rounded-lg border border-white/10 overflow-hidden"
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-purple-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-white">Profile Information</h3>
+                <h3 className="text-base sm:text-lg font-medium text-white">Profile Information</h3>
                 <p className="text-sm text-gray-400">Update your display name and bio</p>
               </div>
             </div>
@@ -102,7 +102,7 @@ export function ProfileSettings() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600/20 text-purple-300 rounded-lg hover:bg-purple-600/30 transition-colors border border-purple-500/30"
+                className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-purple-600/20 text-purple-300 rounded-lg hover:bg-purple-600/30 transition-colors border border-purple-500/30 text-sm sm:text-base"
               >
                 <Edit3 className="h-4 w-4" />
                 <span>Edit Profile</span>
@@ -130,7 +130,7 @@ export function ProfileSettings() {
                     }
                   })}
                   type="text"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="How should others see you?"
                 />
                 {errors.display_name && (
@@ -154,7 +154,7 @@ export function ProfileSettings() {
                     }
                   })}
                   rows={3}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm sm:text-base"
                   placeholder="Tell others a bit about yourself..."
                 />
                 {errors.bio && (
@@ -167,13 +167,13 @@ export function ProfileSettings() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-3 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isUpdating || !displayName?.trim()}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
                 >
                   <Save className="h-4 w-4" />
                   <span>{isUpdating ? 'Saving...' : 'Save Changes'}</span>
@@ -185,7 +185,7 @@ export function ProfileSettings() {
                   type="button"
                   onClick={handleCancel}
                   disabled={isUpdating}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                  className="flex items-center justify-center space-x-2 px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 text-sm sm:text-base"
                 >
                   <X className="h-4 w-4" />
                   <span>Cancel</span>
@@ -199,7 +199,7 @@ export function ProfileSettings() {
                 <label className="block text-sm font-medium text-gray-400 mb-1">
                   Display Name
                 </label>
-                <p className="text-white text-lg font-medium">
+                <p className="text-white text-base sm:text-lg font-medium">
                   {profile.display_name || 'No display name set'}
                 </p>
               </div>
@@ -209,7 +209,7 @@ export function ProfileSettings() {
                 <label className="block text-sm font-medium text-gray-400 mb-1">
                   Bio
                 </label>
-                <p className="text-gray-300 leading-relaxed">
+                <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
                   {profile.bio || 'No bio added yet.'}
                 </p>
               </div>

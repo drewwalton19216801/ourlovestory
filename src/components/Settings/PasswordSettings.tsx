@@ -51,7 +51,7 @@ export function PasswordSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden lg:block">
         <h2 className="text-xl font-semibold text-white mb-2">Password Settings</h2>
         <p className="text-gray-400 mb-6">Update your account password to keep your account secure</p>
       </div>
@@ -59,7 +59,7 @@ export function PasswordSettings() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 rounded-lg p-6 border border-white/10"
+        className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Current Password */}
@@ -73,7 +73,7 @@ export function PasswordSettings() {
                   required: 'Current password is required' 
                 })}
                 type={showCurrentPassword ? 'text' : 'password'}
-                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 placeholder="Enter your current password"
               />
               <button
@@ -81,7 +81,7 @@ export function PasswordSettings() {
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
-                {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showCurrentPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
               </button>
             </div>
             {errors.currentPassword && (
@@ -104,7 +104,7 @@ export function PasswordSettings() {
                   }
                 })}
                 type={showNewPassword ? 'text' : 'password'}
-                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 placeholder="Enter your new password"
               />
               <button
@@ -112,7 +112,7 @@ export function PasswordSettings() {
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
-                {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showNewPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
               </button>
             </div>
             {errors.newPassword && (
@@ -132,7 +132,7 @@ export function PasswordSettings() {
                   validate: value => value === newPassword || 'Passwords do not match'
                 })}
                 type={showConfirmPassword ? 'text' : 'password'}
-                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 placeholder="Confirm your new password"
               />
               <button
@@ -140,7 +140,7 @@ export function PasswordSettings() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showConfirmPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
               </button>
             </div>
             {errors.confirmPassword && (
@@ -154,7 +154,7 @@ export function PasswordSettings() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isUpdating}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
           >
             {isUpdating ? 'Updating Password...' : 'Update Password'}
           </motion.button>
