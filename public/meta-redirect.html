@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Love Story - Loading Memory...</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1f2937, #7c3aed, #ec4899, #1f2937);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid #a855f7;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <script>
+    // Extract memory ID from URL and fetch proper meta tags
+    function getMemoryIdFromUrl() {
+      const path = window.location.pathname;
+      const match = path.match(/\/memory\/([^\/]+)/);
+      return match ? match[1] : null;
+    }
+
+    async function loadMemoryMeta() {
+      const memoryId = getMemoryIdFromUrl();
+      if (!memoryId) {
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        // Try to fetch pre-rendered version for social media bots
+        const response = await fetch(`${window.location.origin}/supabase/functions/v1/memory-meta?id=${memoryId}`);
+        
+        if (response.ok) {
+          const html = await response.text();
+          // Replace current page with the pre-rendered version
+          document.open();
+          document.write(html);
+          document.close();
+        } else {
+          // Fallback to regular app
+          window.location.href = `/memory/${memoryId}`;
+        }
+      } catch (error) {
+        console.error('Failed to load memory meta:', error);
+        // Fallback to regular app
+        window.location.href = `/memory/${memoryId}`;
+      }
+    }
+
+    // Run when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadMemoryMeta);
+    } else {
+      loadMemoryMeta();
+    }
+  </script>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h2>Loading Memory...</h2>
+  <p>Please wait while we prepare your memory for sharing.</p>
+</body>
+</html>
