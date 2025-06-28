@@ -4,7 +4,7 @@ import { Memory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { deleteImages, extractStoragePath } from '../lib/storage';
 
-export function useMemories(publicOnly = false) {
+export function useMemories(publicOnly = false, authorId?: string) {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +25,21 @@ export function useMemories(publicOnly = false) {
         `)
         .order('created_at', { ascending: false });
 
+      // Apply filters based on parameters
       if (publicOnly) {
         query = query.eq('is_public', true);
+      }
+
+      if (authorId) {
+        query = query.eq('author_id', authorId);
+        // If viewing someone else's profile and not authenticated, only show public memories
+        if (authorId !== user?.id && !user) {
+          query = query.eq('is_public', true);
+        }
+        // If viewing someone else's profile while authenticated, only show public memories unless it's your own profile
+        if (authorId !== user?.id) {
+          query = query.eq('is_public', true);
+        }
       }
 
       const { data, error } = await query;
@@ -35,10 +48,26 @@ export function useMemories(publicOnly = false) {
         // Handle the case where foreign key relationships don't exist yet
         if (error.code === 'PGRST200' && error.message.includes('relationship')) {
           // Fall back to a simpler query without joins
-          const { data: simpleData, error: simpleError } = await supabase
+          let simpleQuery = supabase
             .from('memories')
             .select('*')
             .order('created_at', { ascending: false });
+
+          if (publicOnly) {
+            simpleQuery = simpleQuery.eq('is_public', true);
+          }
+
+          if (authorId) {
+            simpleQuery = simpleQuery.eq('author_id', authorId);
+            if (authorId !== user?.id && !user) {
+              simpleQuery = simpleQuery.eq('is_public', true);
+            }
+            if (authorId !== user?.id) {
+              simpleQuery = simpleQuery.eq('is_public', true);
+            }
+          }
+
+          const { data: simpleData, error: simpleError } = await simpleQuery;
 
           if (simpleError) throw simpleError;
 
@@ -325,7 +354,7 @@ export function useMemories(publicOnly = false) {
 
   useEffect(() => {
     fetchMemories();
-  }, [publicOnly, user]);
+  }, [publicOnly, user, authorId]);
 
   return {
     memories,

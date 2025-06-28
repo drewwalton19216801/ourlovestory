@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink, X } from 'lucide-react';
+import { Link as RouterLink } from 'react-router-dom';
 import { Memory } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
@@ -306,9 +307,17 @@ export function MemoryCard({
             </div>
           )}
 
-          {/* Author - Mobile-optimized layout */}
+          {/* Author - Mobile-optimized layout with clickable author name */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-400 mb-4 gap-2">
-            <span className="truncate">By {memory.author_name}</span>
+            <span className="truncate">
+              By{' '}
+              <RouterLink
+                to={`/profile/${memory.author_id}`}
+                className="text-purple-300 hover:text-purple-200 hover:underline transition-colors cursor-pointer font-medium"
+              >
+                {memory.author_name}
+              </RouterLink>
+            </span>
             <span className="text-xs sm:text-sm">Posted {format(new Date(memory.created_at), 'MMM d, yyyy \'at\' HH:mm')}</span>
           </div>
 

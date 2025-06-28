@@ -3,14 +3,17 @@ import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-export function useProfile() {
+export function useProfile(targetUserId?: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
+  // Determine which user's profile to fetch
+  const userId = targetUserId || user?.id;
+
   const fetchProfile = async () => {
-    if (!user) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -22,12 +25,12 @@ export function useProfile() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (error) {
-        // If profile doesn't exist, create one
-        if (error.code === 'PGRST116') {
+        // If profile doesn't exist and it's the current user, create one
+        if (error.code === 'PGRST116' && !targetUserId && user) {
           const { data: newProfile, error: createError } = await supabase
             .from('user_profiles')
             .insert([{
@@ -54,7 +57,7 @@ export function useProfile() {
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user || !profile) return;
+    if (!user || !profile || targetUserId) return;
 
     try {
       // Optimistically update the local state first
@@ -89,13 +92,13 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [user]);
+  }, [userId]);
 
   return {
     profile,
     loading,
     error,
-    updateProfile,
+    updateProfile: targetUserId ? undefined : updateProfile, // Only allow updates for own profile
     refetch: fetchProfile,
   };
 }
