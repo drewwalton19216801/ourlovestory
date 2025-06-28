@@ -35,6 +35,36 @@ const categories = [
   { value: 'everyday_joy', label: 'Everyday Joy', icon: Heart },
 ];
 
+// Helper function to get user display name
+const getUserDisplayName = async (userId: string): Promise<string> => {
+  try {
+    const { supabase } = await import('../../lib/supabase');
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .single();
+    
+    // Return display_name if it exists and is not an email address
+    if (profile?.display_name) {
+      // Check if display_name looks like an email
+      if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
+        // Try to extract a better name from email
+        const emailPrefix = profile.display_name.split('@')[0];
+        if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
+          return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+        }
+        return 'Anonymous';
+      }
+      return profile.display_name;
+    }
+    
+    return 'Anonymous';
+  } catch {
+    return 'Anonymous';
+  }
+};
+
 export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -64,11 +94,8 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
       // Use current date for the memory
       const currentDate = new Date().toISOString().split('T')[0];
       
-      // Get the author name from profile first, fallback to user metadata, then email, then Anonymous
-      const authorName = profile?.display_name || 
-                        user.user_metadata?.name || 
-                        user.email || 
-                        'Anonymous';
+      // Get the author name from profile, ensuring it's not an email address
+      const authorName = await getUserDisplayName(user.id);
       
       // Upload images first if any are selected
       let imageUrls: string[] = [];

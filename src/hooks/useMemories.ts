@@ -223,7 +223,21 @@ export function useMemories(publicOnly = false, authorId?: string) {
         .eq('id', userId)
         .single();
       
-      return profile?.display_name || 'Anonymous';
+      // Return display_name if it exists and is not an email address
+      if (profile?.display_name) {
+        // Check if display_name looks like an email
+        if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
+          // Try to extract a better name from email
+          const emailPrefix = profile.display_name.split('@')[0];
+          if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
+            return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+          }
+          return 'Anonymous';
+        }
+        return profile.display_name;
+      }
+      
+      return 'Anonymous';
     } catch {
       return 'Anonymous';
     }
@@ -425,7 +439,21 @@ export function useSingleMemory(memoryId: string | undefined) {
         .eq('id', userId)
         .single();
       
-      return profile?.display_name || 'Anonymous';
+      // Return display_name if it exists and is not an email address
+      if (profile?.display_name) {
+        // Check if display_name looks like an email
+        if (profile.display_name.includes('@') && profile.display_name.includes('.')) {
+          // Try to extract a better name from email
+          const emailPrefix = profile.display_name.split('@')[0];
+          if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
+            return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+          }
+          return 'Anonymous';
+        }
+        return profile.display_name;
+      }
+      
+      return 'Anonymous';
     } catch {
       return 'Anonymous';
     }

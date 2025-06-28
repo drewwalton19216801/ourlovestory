@@ -31,11 +31,26 @@ export function useProfile(targetUserId?: string) {
       if (error) {
         // If profile doesn't exist and it's the current user, create one
         if (error.code === 'PGRST116' && !targetUserId && user) {
+          // Extract a reasonable display name from user metadata or email
+          let displayName = 'Anonymous';
+          
+          // Try to get name from user metadata
+          if (user.user_metadata?.name && user.user_metadata.name !== user.email) {
+            displayName = user.user_metadata.name;
+          } else if (user.email) {
+            // Extract name from email (before @ symbol) as last resort
+            const emailPrefix = user.email.split('@')[0];
+            // Only use if it doesn't look like a random string
+            if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
+              displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+            }
+          }
+
           const { data: newProfile, error: createError } = await supabase
             .from('user_profiles')
             .insert([{
               id: user.id,
-              display_name: user.user_metadata?.name || user.email || 'Anonymous',
+              display_name: displayName,
               default_post_privacy: true // Default to public posts
             }])
             .select()
