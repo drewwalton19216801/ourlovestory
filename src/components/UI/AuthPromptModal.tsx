@@ -42,7 +42,7 @@ export function AuthPromptModal({ isOpen, onClose, action = 'interact' }: AuthPr
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -57,26 +57,27 @@ export function AuthPromptModal({ isOpen, onClose, action = 'interact' }: AuthPr
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-black/40 backdrop-blur-md rounded-xl border border-white/20 p-6 w-full max-w-md mx-4 shadow-2xl"
+            className="relative bg-black/40 backdrop-blur-md rounded-xl border border-white/20 w-full max-w-md shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <X className="h-4 w-4 text-gray-400" />
-            </button>
-
-            {/* Content */}
-            <div className="pr-8">
-              <div className="flex items-center space-x-3 mb-4">
+            {/* Header with close button */}
+            <div className="flex items-start justify-between p-6 pb-4">
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center border border-purple-500/30">
                   <Heart className="h-6 w-6 text-purple-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white">{title}</h3>
+                <h3 className="text-xl font-semibold text-white truncate">{title}</h3>
               </div>
-              
+              <button
+                onClick={onClose}
+                className="flex-shrink-0 p-1 rounded-full hover:bg-white/10 transition-colors ml-2"
+              >
+                <X className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
               <p className="text-gray-300 mb-6 leading-relaxed">{message}</p>
 
               {/* Benefits */}
