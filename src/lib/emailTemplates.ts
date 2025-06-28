@@ -64,16 +64,25 @@ export function generateVerificationEmail(data: {
         .verify-button {
           display: inline-block;
           background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          color: white;
+          color: #ffffff !important;
           text-decoration: none;
           padding: 16px 32px;
           border-radius: 8px;
           font-weight: 600;
           font-size: 16px;
           transition: transform 0.2s ease;
+          border: none;
+          mso-line-height-rule: exactly;
         }
         .verify-button:hover {
           transform: translateY(-2px);
+          color: #ffffff !important;
+        }
+        .verify-button:visited {
+          color: #ffffff !important;
+        }
+        .verify-button:active {
+          color: #ffffff !important;
         }
         .alternative-link {
           margin-top: 30px;
@@ -128,7 +137,7 @@ export function generateVerificationEmail(data: {
           </div>
           
           <div class="button-container">
-            <a href="${data.verificationUrl}" class="verify-button">
+            <a href="${data.verificationUrl}" class="verify-button" style="color: #ffffff !important; text-decoration: none;">
               Verify My Email Address
             </a>
           </div>
@@ -251,16 +260,25 @@ export function generateRelationshipRequestEmail(data: {
         .action-button {
           display: inline-block;
           background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          color: white;
+          color: #ffffff !important;
           text-decoration: none;
           padding: 16px 32px;
           border-radius: 8px;
           font-weight: 600;
           font-size: 16px;
           transition: transform 0.2s ease;
+          border: none;
+          mso-line-height-rule: exactly;
         }
         .action-button:hover {
           transform: translateY(-2px);
+          color: #ffffff !important;
+        }
+        .action-button:visited {
+          color: #ffffff !important;
+        }
+        .action-button:active {
+          color: #ffffff !important;
         }
         .info-section {
           background: #f0f9ff;
@@ -337,7 +355,7 @@ export function generateRelationshipRequestEmail(data: {
           </div>
           
           <div class="button-container">
-            <a href="${data.appUrl}" class="action-button">
+            <a href="${data.appUrl}" class="action-button" style="color: #ffffff !important; text-decoration: none;">
               View & Respond to Request
             </a>
           </div>
@@ -455,16 +473,25 @@ export function generateWelcomeEmail(data: {
         .action-button {
           display: inline-block;
           background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          color: white;
+          color: #ffffff !important;
           text-decoration: none;
           padding: 16px 32px;
           border-radius: 8px;
           font-weight: 600;
           font-size: 16px;
           transition: transform 0.2s ease;
+          border: none;
+          mso-line-height-rule: exactly;
         }
         .action-button:hover {
           transform: translateY(-2px);
+          color: #ffffff !important;
+        }
+        .action-button:visited {
+          color: #ffffff !important;
+        }
+        .action-button:active {
+          color: #ffffff !important;
         }
         .footer {
           background: #f9fafb;
@@ -535,7 +562,7 @@ export function generateWelcomeEmail(data: {
           </div>
           
           <div class="button-container">
-            <a href="${data.appUrl}" class="action-button">
+            <a href="${data.appUrl}" class="action-button" style="color: #ffffff !important; text-decoration: none;">
               Start Creating Your Story
             </a>
           </div>
