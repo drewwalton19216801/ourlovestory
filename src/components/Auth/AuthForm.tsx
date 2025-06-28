@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Heart, Mail, Lock, User, RefreshCw, CheckCircle } from 'lucide-react';
+import { Heart, Mail, Lock, User, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -26,11 +26,45 @@ export function AuthForm() {
 
   const email = watch('email');
 
-  // Check if user just verified their email
+  // Check for verification status in URL parameters
   useEffect(() => {
     const verified = searchParams.get('verified');
+    const verificationStatus = searchParams.get('verification_status');
+
     if (verified === 'true') {
       toast.success('Email verified successfully! You can now sign in.');
+    } else if (verificationStatus) {
+      // Handle different verification error states
+      switch (verificationStatus) {
+        case 'invalid_link':
+          toast.error('Invalid verification link. Please check that you clicked the correct link from your email.');
+          break;
+        case 'invalid_token':
+          toast.error('Invalid or expired verification token. Please try requesting a new verification email.');
+          setShowResendVerification(true);
+          break;
+        case 'missing_user_id':
+          toast.error('Malformed verification link. Please check that you clicked the complete link from your email.');
+          break;
+        case 'verification_failed':
+          toast.error('Email verification failed. The link may be expired or already used. Please try requesting a new verification email.');
+          setShowResendVerification(true);
+          break;
+        case 'server_error':
+          toast.error('A server error occurred during verification. Please try again or contact support if the issue persists.');
+          break;
+        default:
+          toast.error('Email verification failed. Please try requesting a new verification email.');
+          setShowResendVerification(true);
+      }
+    }
+
+    // Clear the parameters from URL after handling them
+    if (verified || verificationStatus) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('verified');
+      newUrl.searchParams.delete('verification_status');
+      window.history.replaceState({}, '', newUrl.toString());
     }
   }, [searchParams]);
 
@@ -196,7 +230,7 @@ export function AuthForm() {
           {showResendVerification && !isSignUp && (
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
               <div className="flex items-start space-x-2 mb-3">
-                <Mail className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="text-yellow-300 font-medium mb-1">Email Verification Required</p>
                   <p className="text-yellow-200/80 text-xs leading-relaxed">
