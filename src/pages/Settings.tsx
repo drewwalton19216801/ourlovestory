@@ -13,24 +13,28 @@ export function Settings() {
     {
       id: 'profile' as const,
       label: 'Profile',
+      shortLabel: 'Profile',
       icon: User,
       description: 'Update your display name and bio'
     },
     {
       id: 'privacy' as const,
       label: 'Privacy',
+      shortLabel: 'Privacy',
       icon: Eye,
       description: 'Manage your privacy preferences'
     },
     {
       id: 'password' as const,
       label: 'Password',
+      shortLabel: 'Password',
       icon: Lock,
       description: 'Update your account password'
     },
     {
       id: 'relationships' as const,
       label: 'Relationships',
+      shortLabel: 'Connect',
       icon: Users,
       description: 'Connect with partners and friends'
     }
@@ -56,22 +60,22 @@ export function Settings() {
 
         {/* Mobile Navigation (Horizontal Tabs) */}
         <div className="lg:hidden border-b border-white/10">
-          <div className="flex overflow-x-auto scrollbar-hide">
+          <div className="flex overflow-x-auto scrollbar-hide px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-shrink-0 flex flex-col items-center px-4 py-4 min-w-[90px] transition-all ${
+                  className={`flex-shrink-0 flex flex-col items-center px-2 py-3 min-w-[70px] max-w-[80px] transition-all ${
                     activeTab === tab.id
                       ? 'text-purple-300 bg-purple-500/20 border-b-2 border-purple-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <Icon className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium text-center leading-tight">
-                    {tab.label}
+                  <Icon className="h-4 w-4 mb-1" />
+                  <span className="text-xs font-medium text-center leading-tight truncate w-full">
+                    {tab.shortLabel}
                   </span>
                 </button>
               );
