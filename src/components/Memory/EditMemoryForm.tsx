@@ -4,10 +4,9 @@ import { useForm } from 'react-hook-form';
 import { MapPin, Globe, Lock, Heart, ArrowLeft, X, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRelationships } from '../../hooks/useRelationships';
 import { useMemories } from '../../hooks/useMemories';
-import { Memory, MemoryCategory } from '../../types';
-import { PartnerSelector } from './PartnerSelector';
+import { Memory, MemoryCategory, SelectedUser } from '../../types';
+import { UserMultiSelect } from './UserMultiSelect';
 import { ImageUpload } from './ImageUpload';
 import { extractStoragePath } from '../../lib/storage';
 import toast from 'react-hot-toast';
@@ -50,13 +49,12 @@ const formatMemoryDate = (dateString: string): string => {
 
 export function EditMemoryForm({ memory }: EditMemoryFormProps) {
   const { user } = useAuth();
-  const { relationships } = useRelationships();
   const { updateMemory } = useMemories();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(memory.images || []);
   const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([]);
-  const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
     defaultValues: {
@@ -70,11 +68,14 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
 
   const isPublic = watch('is_public');
 
-  // Initialize selected partners from existing participants
+  // Initialize selected users from existing participants
   useEffect(() => {
     if (memory.participants && memory.participants.length > 0) {
-      const participantIds = memory.participants.map(p => p.user_id);
-      setSelectedPartners(participantIds);
+      const participantUsers: SelectedUser[] = memory.participants.map(p => ({
+        id: p.user_id,
+        display_name: p.user_name
+      }));
+      setSelectedUsers(participantUsers);
     }
   }, [memory.participants]);
 
@@ -97,9 +98,13 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
       );
 
       // Update participants if any changes
-      if (selectedPartners.length !== (memory.participants?.length || 0) || 
-          !selectedPartners.every(id => memory.participants?.some(p => p.user_id === id))) {
-        
+      const currentParticipantIds = memory.participants?.map(p => p.user_id) || [];
+      const newParticipantIds = selectedUsers.map(u => u.id);
+      
+      const hasChanges = currentParticipantIds.length !== newParticipantIds.length ||
+        !currentParticipantIds.every(id => newParticipantIds.includes(id));
+
+      if (hasChanges) {
         const { supabase } = await import('../../lib/supabase');
         
         // Remove existing participants
@@ -109,15 +114,12 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
           .eq('memory_id', memory.id);
 
         // Add new participants
-        if (selectedPartners.length > 0) {
-          const participantInserts = selectedPartners.map(partnerId => {
-            const partner = relationships.find(r => r.partner_id === partnerId);
-            return {
-              memory_id: memory.id,
-              user_id: partnerId,
-              user_name: partner?.partner_name || 'Anonymous'
-            };
-          });
+        if (selectedUsers.length > 0) {
+          const participantInserts = selectedUsers.map(selectedUser => ({
+            memory_id: memory.id,
+            user_id: selectedUser.id,
+            user_name: selectedUser.display_name
+          }));
 
           await supabase
             .from('memory_participants')
@@ -137,6 +139,10 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
 
   const handleNewFilesSelected = (files: File[]) => {
     setNewlySelectedImageFiles(files);
+  };
+
+  const handleUsersChange = (users: SelectedUser[]) => {
+    setSelectedUsers(users);
   };
 
   const removeExistingImage = (imageUrl: string) => {
@@ -251,11 +257,10 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
             </div>
           </div>
 
-          {/* Partner Selector */}
-          <PartnerSelector
-            relationships={relationships}
-            selectedPartners={selectedPartners}
-            onPartnersChange={setSelectedPartners}
+          {/* User Multi-Select */}
+          <UserMultiSelect
+            selectedUsers={selectedUsers}
+            onUsersChange={handleUsersChange}
             disabled={isSubmitting}
           />
 
@@ -313,7 +318,7 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
                   {isPublic ? 'Public Memory' : 'Private Memory'}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged partners'}
+                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged people'}
                 </p>
               </div>
             </div>

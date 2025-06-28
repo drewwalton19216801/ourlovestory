@@ -4,10 +4,9 @@ import { useForm } from 'react-hook-form';
 import { MapPin, Globe, Lock, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
-import { useRelationships } from '../../hooks/useRelationships';
-import { Memory, MemoryCategory } from '../../types';
+import { Memory, MemoryCategory, SelectedUser } from '../../types';
 import { useNavigate } from 'react-router-dom';
-import { PartnerSelector } from './PartnerSelector';
+import { UserMultiSelect } from './UserMultiSelect';
 import { ImageUpload } from './ImageUpload';
 import { uploadImages } from '../../lib/storage';
 import toast from 'react-hot-toast';
@@ -74,11 +73,10 @@ const getUserDisplayName = async (userId: string): Promise<string> => {
 export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { relationships } = useRelationships();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([]);
-  const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
 
   // Use user's default privacy setting if available
   const defaultPrivacy = profile?.default_post_privacy ?? true;
@@ -129,16 +127,13 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
       const newMemory = await onAddMemory(memory);
       
       // Add participants if any are selected
-      if (selectedPartners.length > 0) {
+      if (selectedUsers.length > 0) {
         const { supabase } = await import('../../lib/supabase');
-        const participantInserts = selectedPartners.map(partnerId => {
-          const partner = relationships.find(r => r.partner_id === partnerId);
-          return {
-            memory_id: newMemory.id,
-            user_id: partnerId,
-            user_name: partner?.partner_name || 'Anonymous'
-          };
-        });
+        const participantInserts = selectedUsers.map(selectedUser => ({
+          memory_id: newMemory.id,
+          user_id: selectedUser.id,
+          user_name: selectedUser.display_name
+        }));
 
         await supabase
           .from('memory_participants')
@@ -157,6 +152,10 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
 
   const handleNewFilesSelected = (files: File[]) => {
     setNewlySelectedImageFiles(files);
+  };
+
+  const handleUsersChange = (users: SelectedUser[]) => {
+    setSelectedUsers(users);
   };
 
   return (
@@ -251,11 +250,10 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
             </div>
           </div>
 
-          {/* Partner Selector */}
-          <PartnerSelector
-            relationships={relationships}
-            selectedPartners={selectedPartners}
-            onPartnersChange={setSelectedPartners}
+          {/* User Multi-Select */}
+          <UserMultiSelect
+            selectedUsers={selectedUsers}
+            onUsersChange={handleUsersChange}
             disabled={isSubmitting}
           />
 
@@ -283,7 +281,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
                   {isPublic ? 'Public Memory' : 'Private Memory'}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged partners'}
+                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged people'}
                 </p>
               </div>
             </div>

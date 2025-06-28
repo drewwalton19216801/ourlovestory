@@ -16,6 +16,11 @@ export interface UserProfile {
   default_post_privacy?: boolean;
 }
 
+export interface SelectedUser {
+  id: string;
+  display_name: string;
+}
+
 export interface Relationship {
   id: string;
   created_at: string;
