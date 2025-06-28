@@ -379,15 +379,13 @@ export function MemoryCard({
               </button>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={handleCommentsToggle}
               className="flex items-center justify-center space-x-1 px-3 py-2 rounded-full bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white transition-colors flex-shrink-0"
             >
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm">{memory.comments?.length || 0}</span>
-            </motion.button>
+            </button>
           </div>
         </div>
 
