@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { MapPin, Globe, Lock, Heart, ArrowLeft, X, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRelationships } from '../../hooks/useRelationships';
 import { useMemories } from '../../hooks/useMemories';
 import { Memory, MemoryCategory, SelectedUser } from '../../types';
 import { UserMultiSelect } from './UserMultiSelect';
@@ -49,6 +50,7 @@ const formatMemoryDate = (dateString: string): string => {
 
 export function EditMemoryForm({ memory }: EditMemoryFormProps) {
   const { user } = useAuth();
+  const { relationships } = useRelationships();
   const { updateMemory } = useMemories();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -261,6 +263,7 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
           <UserMultiSelect
             selectedUsers={selectedUsers}
             onUsersChange={handleUsersChange}
+            relationships={relationships}
             disabled={isSubmitting}
           />
 
@@ -318,7 +321,7 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
                   {isPublic ? 'Public Memory' : 'Private Memory'}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged people'}
+                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged partners'}
                 </p>
               </div>
             </div>

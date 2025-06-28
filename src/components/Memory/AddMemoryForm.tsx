@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { MapPin, Globe, Lock, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
+import { useRelationships } from '../../hooks/useRelationships';
 import { Memory, MemoryCategory, SelectedUser } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { UserMultiSelect } from './UserMultiSelect';
@@ -73,6 +74,7 @@ const getUserDisplayName = async (userId: string): Promise<string> => {
 export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { relationships } = useRelationships();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([]);
@@ -254,6 +256,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
           <UserMultiSelect
             selectedUsers={selectedUsers}
             onUsersChange={handleUsersChange}
+            relationships={relationships}
             disabled={isSubmitting}
           />
 
@@ -281,7 +284,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
                   {isPublic ? 'Public Memory' : 'Private Memory'}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged people'}
+                  {isPublic ? 'Visible to everyone' : 'Only visible to you and tagged partners'}
                 </p>
               </div>
             </div>

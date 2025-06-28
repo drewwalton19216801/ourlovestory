@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, Search, UserPlus, Loader2 } from 'lucide-react';
 import { useUserSearch, SearchableUser } from '../../hooks/useUserSearch';
-import { SelectedUser } from '../../types';
+import { SelectedUser, Relationship } from '../../types';
 import { useDebounce } from '../../hooks/useDebounce';
 
 interface UserMultiSelectProps {
   selectedUsers: SelectedUser[];
   onUsersChange: (users: SelectedUser[]) => void;
+  relationships: Relationship[];
   disabled?: boolean;
   placeholder?: string;
 }
@@ -15,8 +16,9 @@ interface UserMultiSelectProps {
 export function UserMultiSelect({ 
   selectedUsers, 
   onUsersChange, 
+  relationships,
   disabled = false,
-  placeholder = "Search for users to tag..."
+  placeholder = "Search for partners to tag..."
 }: UserMultiSelectProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -89,15 +91,34 @@ export function UserMultiSelect({
     return selectedUsers.some(selected => selected.id === userId);
   };
 
+  // Get partner IDs from relationships
+  const partnerIds = relationships.map(rel => rel.partner_id!);
+  
+  // Filter search results to only include established relationship partners
   const filteredResults = searchResults.filter(user => 
-    !isUserSelected(user.id)
+    !isUserSelected(user.id) && partnerIds.includes(user.id)
   );
+
+  // Check if user has any relationships
+  if (relationships.length === 0) {
+    return (
+      <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+        <div className="flex items-center space-x-2 text-gray-400 mb-2">
+          <Users className="h-4 w-4" />
+          <span className="text-sm font-medium">Tag Partners</span>
+        </div>
+        <p className="text-sm text-gray-500">
+          Connect with partners in your settings to tag them in memories.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-3">
         <Users className="inline h-4 w-4 mr-1" />
-        Tag People
+        Tag Partners
       </label>
       
       <div className="space-y-3">
@@ -173,33 +194,40 @@ export function UserMultiSelect({
                     <p className="text-sm">
                       {searchQuery.length < 2 
                         ? 'Type at least 2 characters to search' 
-                        : 'No users found'
+                        : partnerIds.length === 0 
+                        ? 'No established partnerships found'
+                        : 'No partners match your search'
                       }
                     </p>
                   </div>
                 ) : (
                   <div className="py-2">
-                    {filteredResults.map(user => (
-                      <motion.button
-                        key={user.id}
-                        whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
-                        onClick={() => handleUserSelect(user)}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-purple-500/10 transition-colors"
-                      >
-                        <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-medium text-purple-300">
-                            {user.display_name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium truncate">{user.display_name}</p>
-                          <p className="text-xs text-gray-400">
-                            {user.is_public_profile ? 'Public profile' : 'Private profile'}
-                          </p>
-                        </div>
-                        <UserPlus className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                      </motion.button>
-                    ))}
+                    {filteredResults.map(user => {
+                      // Find the relationship to get relationship type
+                      const relationship = relationships.find(rel => rel.partner_id === user.id);
+                      return (
+                        <motion.button
+                          key={user.id}
+                          whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
+                          onClick={() => handleUserSelect(user)}
+                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-purple-500/10 transition-colors"
+                        >
+                          <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-sm font-medium text-purple-300">
+                              {user.display_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-medium truncate">{user.display_name}</p>
+                            <p className="text-xs text-gray-400 capitalize">
+                              {relationship?.relationship_type?.replace('_', ' ') || 'Partner'}
+                              {relationship?.is_primary && ' • Primary'}
+                            </p>
+                          </div>
+                          <UserPlus className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 )}
               </motion.div>
@@ -209,9 +237,9 @@ export function UserMultiSelect({
 
         {/* Help Text */}
         <div className="text-sm text-gray-500">
-          <p>Search for people by their display name to tag them in this memory.</p>
-          {selectedUsers.length === 0 && (
-            <p className="mt-1">Tagged people will be able to see this memory and interact with it.</p>
+          <p>Search for your established partners by name to tag them in this memory.</p>
+          {selectedUsers.length === 0 && relationships.length > 0 && (
+            <p className="mt-1">You can tag {relationships.length} partner{relationships.length > 1 ? 's' : ''} who you have connected with.</p>
           )}
         </div>
       </div>
