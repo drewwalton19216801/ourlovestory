@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Navigation } from './components/Layout/Navigation';
 import { Timeline } from './pages/Timeline';
 import { AddMemory } from './pages/AddMemory';
+import { EditMemory } from './pages/EditMemory';
 import { Settings } from './pages/Settings';
 import { Auth } from './pages/Auth';
 import { SingleMemory } from './pages/SingleMemory';
@@ -49,6 +50,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AddMemory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-memory/:id"
+            element={
+              <ProtectedRoute>
+                <EditMemory />
               </ProtectedRoute>
             }
           />
