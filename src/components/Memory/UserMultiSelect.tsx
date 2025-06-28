@@ -208,6 +208,7 @@ export function UserMultiSelect({
                       return (
                         <motion.button
                           key={user.id}
+                          type="button"
                           whileHover={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}
                           onClick={() => handleUserSelect(user)}
                           className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-purple-500/10 transition-colors"
