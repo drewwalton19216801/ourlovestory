@@ -44,6 +44,11 @@ serve(async (req) => {
       )
     }
 
+    // Use the correct domain based on SITE_URL environment variable
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://ourlovestory.online'
+    const domain = new URL(siteUrl).hostname
+    const fromEmail = `Our Love Story <noreply@${domain}>`
+
     // Send email via Resend API
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -52,7 +57,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Our Love Story <noreply@ourlovestory.app>',
+        from: fromEmail,
         to: [to],
         subject: subject,
         html: html,
