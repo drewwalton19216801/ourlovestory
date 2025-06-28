@@ -51,37 +51,37 @@ export function Timeline() {
         </div>
         
         <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
-          Share Your Love Story
+          Connect Through Love Stories
         </h1>
         
         <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Create a beautiful timeline of your relationship. Share precious moments, 
-          celebrate milestones, and build a digital scrapbook of your love story that 
-          you can treasure forever.
+          Join a social network where relationships matter. Connect with your partner, 
+          family, and friends to share precious memories, celebrate milestones together, 
+          and build a community around the moments that define your relationships.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-            <Calendar className="h-8 w-8 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Timeline Memories</h3>
+            <Users className="h-8 w-8 text-purple-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">Connect & Share</h3>
             <p className="text-gray-400 text-sm">
-              Document your journey from first dates to anniversaries
+              Build your network and share memories with partners, family, and close friends
             </p>
           </div>
           
           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
             <Heart className="h-8 w-8 text-pink-400 mx-auto mb-4" fill="currentColor" />
-            <h3 className="text-lg font-semibold text-white mb-2">Share & React</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">Community Engagement</h3>
             <p className="text-gray-400 text-sm">
-              React to memories and leave sweet comments for each other
+              React, comment, and celebrate each other's special moments together
             </p>
           </div>
           
           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-            <MapPin className="h-8 w-8 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Track Places</h3>
+            <Calendar className="h-8 w-8 text-purple-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">Shared Timelines</h3>
             <p className="text-gray-400 text-sm">
-              Remember all the special places where memories were made
+              Create collaborative timelines with those who matter most to you
             </p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export function Timeline() {
             href="/auth"
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            Start Your Story
+            Join Our Community
             <ArrowRight className="ml-2 h-5 w-5" />
           </a>
           
@@ -111,7 +111,7 @@ export function Timeline() {
         className="text-center"
       >
         <p className="text-gray-500 text-sm">
-          Join thousands of couples sharing their love stories
+          Join a growing community celebrating love, friendship, and family connections
         </p>
       </motion.div>
     </div>
