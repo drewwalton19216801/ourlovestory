@@ -194,9 +194,7 @@ export function SingleMemory() {
             <div className="text-sm">
               <p className="text-purple-300 font-medium mb-1">Share This Memory</p>
               <p className="text-purple-200/80">
-                This memory has its own dedicated page that you can share on social media. 
-                When shared, it will display the memory's title, description, images, and all relevant details for a rich preview.
-                Use the "Copy Post Link" option to get a direct link to this memory.
+                This memory has its own dedicated page that you can share on social media. Use the "Copy Post Link" option to get a direct link to this memory.
               </p>
             </div>
           </div>
