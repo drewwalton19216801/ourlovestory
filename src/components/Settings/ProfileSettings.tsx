@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Edit3, Save, X } from 'lucide-react';
+import { User, Edit3, Save, X, Heart } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useProfile } from '../../hooks/useProfile';
 import toast from 'react-hot-toast';
@@ -8,7 +8,21 @@ import toast from 'react-hot-toast';
 interface ProfileFormData {
   display_name: string;
   bio: string;
+  relationship_status: 'single' | 'in_relationship' | 'married' | 'complicated' | 'prefer_not_to_say';
 }
+
+const relationshipStatusOptions = [
+  { value: 'single', label: 'Single' },
+  { value: 'in_relationship', label: 'In a Relationship' },
+  { value: 'married', label: 'Married' },
+  { value: 'complicated', label: "It's Complicated" },
+  { value: 'prefer_not_to_say', label: 'Prefer Not to Say' },
+];
+
+const getRelationshipStatusDisplay = (status: string) => {
+  const option = relationshipStatusOptions.find(opt => opt.value === status);
+  return option ? option.label : 'Not specified';
+};
 
 export function ProfileSettings() {
   const { profile, updateProfile, loading } = useProfile();
@@ -18,7 +32,8 @@ export function ProfileSettings() {
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ProfileFormData>({
     defaultValues: {
       display_name: profile?.display_name || '',
-      bio: profile?.bio || ''
+      bio: profile?.bio || '',
+      relationship_status: profile?.relationship_status || 'single'
     }
   });
 
@@ -27,7 +42,8 @@ export function ProfileSettings() {
     if (profile && isEditing) {
       reset({
         display_name: profile.display_name || '',
-        bio: profile.bio || ''
+        bio: profile.bio || '',
+        relationship_status: profile.relationship_status || 'single'
       });
     }
   }, [profile, isEditing, reset]);
@@ -39,7 +55,8 @@ export function ProfileSettings() {
     try {
       await updateProfile({
         display_name: data.display_name.trim(),
-        bio: data.bio.trim()
+        bio: data.bio.trim(),
+        relationship_status: data.relationship_status
       });
       
       setIsEditing(false);
@@ -56,7 +73,8 @@ export function ProfileSettings() {
     setIsEditing(false);
     reset({
       display_name: profile?.display_name || '',
-      bio: profile?.bio || ''
+      bio: profile?.bio || '',
+      relationship_status: profile?.relationship_status || 'single'
     });
   };
 
@@ -93,7 +111,7 @@ export function ProfileSettings() {
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-medium text-white">Profile Information</h3>
-                <p className="text-sm text-gray-400">Update your display name and bio</p>
+                <p className="text-sm text-gray-400">Update your display name, bio, and relationship status</p>
               </div>
             </div>
             
@@ -166,6 +184,27 @@ export function ProfileSettings() {
                 </div>
               </div>
 
+              {/* Relationship Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Heart className="inline h-4 w-4 mr-1" />
+                  Relationship Status
+                </label>
+                <select
+                  {...register('relationship_status')}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
+                >
+                  {relationshipStatusOptions.map(option => (
+                    <option key={option.value} value={option.value} className="bg-gray-800">
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Let others know your current relationship status.
+                </p>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                 <motion.button
@@ -213,6 +252,17 @@ export function ProfileSettings() {
                   {profile.bio || 'No bio added yet.'}
                 </p>
               </div>
+
+              {/* Relationship Status Display */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  <Heart className="inline h-4 w-4 mr-1" />
+                  Relationship Status
+                </label>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  {getRelationshipStatusDisplay(profile.relationship_status)}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -233,6 +283,7 @@ export function ProfileSettings() {
               <li>• Your display name appears on all memories you create</li>
               <li>• Choose a name that your partner(s) will recognize</li>
               <li>• Your bio helps others learn about you when connecting</li>
+              <li>• Relationship status helps others understand your situation</li>
               <li>• You can update your profile information anytime</li>
             </ul>
           </div>
