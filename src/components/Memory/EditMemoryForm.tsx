@@ -35,6 +35,19 @@ const categories = [
   { value: 'everyday_joy', label: 'Everyday Joy', icon: Heart },
 ];
 
+// Helper function to properly format date without timezone issues
+const formatMemoryDate = (dateString: string): string => {
+  // Parse the date string manually to avoid timezone issues
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month is 0-indexed
+  
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
 export function EditMemoryForm({ memory }: EditMemoryFormProps) {
   const { user } = useAuth();
   const { relationships } = useRelationships();
@@ -185,12 +198,12 @@ export function EditMemoryForm({ memory }: EditMemoryFormProps) {
             )}
           </div>
 
-          {/* Date Display */}
+          {/* Date Display - Fixed timezone issue */}
           <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <Heart className="h-4 w-4 text-purple-400" />
               <p className="text-purple-300 text-sm">
-                Memory date: <span className="font-medium">{new Date(memory.date).toLocaleDateString()}</span>
+                Memory date: <span className="font-medium">{formatMemoryDate(memory.date)}</span>
               </p>
             </div>
             <p className="text-purple-200/80 text-xs mt-1">
