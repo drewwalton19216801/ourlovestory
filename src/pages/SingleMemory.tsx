@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, AlertCircle } from 'lucide-react';
@@ -6,10 +6,111 @@ import { MemoryCard } from '../components/Memory/MemoryCard';
 import { useSingleMemory } from '../hooks/useMemories';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper function to update OpenGraph meta tags
+const updateMetaTags = (memory: any) => {
+  const siteUrl = window.location.origin;
+  const memoryUrl = `${siteUrl}/memory/${memory.id}`;
+  
+  // Helper function to update or create meta tag
+  const updateMetaTag = (property: string, content: string, isProperty = true) => {
+    const attribute = isProperty ? 'property' : 'name';
+    let meta = document.querySelector(`meta[${attribute}="${property}"]`);
+    
+    if (meta) {
+      meta.setAttribute('content', content);
+    } else {
+      meta = document.createElement('meta');
+      meta.setAttribute(attribute, property);
+      meta.setAttribute('content', content);
+      document.head.appendChild(meta);
+    }
+  };
+
+  // Update page title
+  document.title = `${memory.title} - Our Love Story`;
+
+  // Update OpenGraph tags
+  updateMetaTag('og:title', memory.title);
+  updateMetaTag('og:description', memory.description);
+  updateMetaTag('og:url', memoryUrl);
+  updateMetaTag('og:type', 'article');
+  
+  // Use first image if available, otherwise use default
+  const imageUrl = memory.images && memory.images.length > 0 
+    ? memory.images[0] 
+    : 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+  updateMetaTag('og:image', imageUrl);
+
+  // Update Twitter Card tags
+  updateMetaTag('twitter:card', 'summary_large_image', false);
+  updateMetaTag('twitter:title', memory.title, false);
+  updateMetaTag('twitter:description', memory.description, false);
+  updateMetaTag('twitter:image', imageUrl, false);
+
+  // Add article-specific meta tags
+  updateMetaTag('article:author', memory.author_name);
+  updateMetaTag('article:published_time', memory.created_at);
+  updateMetaTag('article:modified_time', memory.updated_at);
+  
+  if (memory.location) {
+    updateMetaTag('article:tag', memory.location);
+  }
+  updateMetaTag('article:tag', memory.category);
+};
+
+// Helper function to reset meta tags to defaults
+const resetMetaTags = () => {
+  const siteUrl = window.location.origin;
+  
+  // Reset to default values
+  document.title = 'Our Love Story - Romantic Timeline';
+  
+  const updateMetaTag = (property: string, content: string, isProperty = true) => {
+    const attribute = isProperty ? 'property' : 'name';
+    const meta = document.querySelector(`meta[${attribute}="${property}"]`);
+    if (meta) {
+      meta.setAttribute('content', content);
+    }
+  };
+
+  // Reset to default OpenGraph tags
+  updateMetaTag('og:title', 'Our Love Story - Romantic Timeline');
+  updateMetaTag('og:description', 'A beautiful timeline application for couples to share and celebrate their love story together.');
+  updateMetaTag('og:url', siteUrl);
+  updateMetaTag('og:type', 'website');
+  updateMetaTag('og:image', 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+
+  // Reset Twitter Card tags
+  updateMetaTag('twitter:title', 'Our Love Story - Romantic Timeline', false);
+  updateMetaTag('twitter:description', 'A beautiful timeline application for couples to share and celebrate their love story together.', false);
+  updateMetaTag('twitter:image', 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', false);
+
+  // Remove article-specific tags
+  const articleTags = ['article:author', 'article:published_time', 'article:modified_time', 'article:tag'];
+  articleTags.forEach(tag => {
+    const meta = document.querySelector(`meta[property="${tag}"]`);
+    if (meta) {
+      meta.remove();
+    }
+  });
+};
+
 export function SingleMemory() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { memory, loading, error, toggleReaction, addComment, deleteComment } = useSingleMemory(id);
+
+  // Update meta tags when memory loads
+  useEffect(() => {
+    if (memory) {
+      updateMetaTags(memory);
+    }
+
+    // Cleanup function to reset meta tags when component unmounts
+    return () => {
+      resetMetaTags();
+    };
+  }, [memory]);
 
   // Handle missing ID parameter
   if (!id) {
@@ -169,7 +270,8 @@ export function SingleMemory() {
           <div className="text-sm">
             <p className="text-purple-300 font-medium mb-1">Share This Memory</p>
             <p className="text-purple-200/80">
-              This memory has its own dedicated page that you can share with others. 
+              This memory has its own dedicated page that you can share on social media. 
+              When shared, it will display the memory's title, description, and images for a rich preview.
               Use the "Copy Post Link" option to get a direct link to this memory.
             </p>
           </div>
