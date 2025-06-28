@@ -62,7 +62,7 @@ const generateMemoryHTML = (memory: any, siteUrl: string) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${pageTitle}</title>
   <meta name="description" content="${enhancedDescription}">
-  <meta name="keywords" content="${categoryName.toLowerCase()}, love story, memories, ${memory.location || 'relationship'}, ${memory.author_name}">
+  <meta name="keywords" content="${categoryName.toLowerCase()}, memories, relationships, ${memory.location || 'special moments'}, ${memory.author_name}">
   <meta name="author" content="${memory.author_name}">
   <meta name="robots" content="${memory.is_public ? 'index, follow' : 'noindex, nofollow'}">
   
@@ -89,11 +89,11 @@ const generateMemoryHTML = (memory: any, siteUrl: string) => {
   <meta property="article:author" content="${memory.author_name}" />
   <meta property="article:published_time" content="${memory.created_at}" />
   <meta property="article:modified_time" content="${memory.updated_at || memory.created_at}" />
-  <meta property="article:section" content="Love Stories" />
+  <meta property="article:section" content="Memories" />
   <meta property="article:tag" content="${categoryName}" />
   ${memory.location ? `<meta property="article:tag" content="${memory.location}" />` : ''}
-  <meta property="article:tag" content="love story" />
   <meta property="article:tag" content="memories" />
+  <meta property="article:tag" content="relationships" />
   
   <!-- Additional images -->
   ${memory.images && memory.images.length > 1 ? 
@@ -129,8 +129,8 @@ const generateMemoryHTML = (memory: any, siteUrl: string) => {
       "@id": "${memoryUrl}"
     },
     "url": "${memoryUrl}",
-    "articleSection": "Love Stories",
-    "keywords": "${categoryName}, ${memory.location || ''}, love story, memories".replace(/, ,/g, ',').replace(/^,|,$/g, ''),
+    "articleSection": "Memories",
+    "keywords": "${categoryName}, ${memory.location || ''}, memories, relationships".replace(/, ,/g, ',').replace(/^,|,$/g, ''),
     "about": {
       "@type": "Thing",
       "name": "${categoryName}"

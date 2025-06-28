@@ -131,7 +131,7 @@ export function generateVerificationEmail(data: {
           <div class="greeting">Hello ${data.userName}!</div>
           
           <div class="message">
-            <p>Welcome to ${siteName}! We're excited to have you join our community of couples sharing their beautiful love stories.</p>
+            <p>Welcome to ${siteName}! We're excited to have you join our community where people connect to share meaningful memories and celebrate life's special moments together.</p>
             
             <p>To complete your account setup and start creating memories, please verify your email address by clicking the button below:</p>
           </div>
@@ -150,10 +150,10 @@ export function generateVerificationEmail(data: {
           <div class="message">
             <p><strong>What's next?</strong></p>
             <ul>
-              <li>Create your first memory together</li>
-              <li>Connect with your partner</li>
-              <li>Build your digital love story timeline</li>
-              <li>Share special moments and milestones</li>
+              <li>Create your first memory and share a special moment</li>
+              <li>Connect with family, friends, and loved ones</li>
+              <li>Build beautiful timelines of your relationships</li>
+              <li>Engage with others' memories through reactions and comments</li>
             </ul>
             
             <p>If you didn't create an account with us, you can safely ignore this email.</p>
@@ -347,10 +347,10 @@ export function generateRelationshipRequestEmail(data: {
           <div class="info-section">
             <h3>✨ What you can do together:</h3>
             <ul>
-              <li>Share private memories and moments</li>
-              <li>Tag each other in special posts</li>
+              <li>Share private memories and special moments</li>
+              <li>Tag each other in meaningful posts</li>
               <li>React and comment on each other's memories</li>
-              <li>Build your shared timeline together</li>
+              <li>Build shared timelines together</li>
             </ul>
           </div>
           
@@ -582,7 +582,7 @@ export function generateInvitationEmail(data: {
           ` : ''}
           
           <div class="message">
-            <p>${siteName} is a beautiful platform where couples and families can create and share their love stories together. Join us to:</p>
+            <p>${siteName} is a beautiful platform where people can connect and share their meaningful memories together. Join us to:</p>
           </div>
           
           <div class="features-section">
@@ -612,7 +612,7 @@ export function generateInvitationEmail(data: {
               <li>Connect with ${data.inviterName} and others</li>
             </ol>
             
-            <p>Join thousands of couples and families who are already creating beautiful digital scrapbooks of their most precious moments.</p>
+            <p>Join a growing community celebrating connections, family bonds, friendships, and all the relationships that make life meaningful.</p>
           </div>
         </div>
         
@@ -778,7 +778,7 @@ export function generateWelcomeEmail(data: {
           <div class="greeting">Hello ${data.userName}!</div>
           
           <div class="message">
-            <p>Welcome to ${siteName}! Your email has been verified and your account is now active. We're thrilled to have you join our community of couples who are creating beautiful digital timelines of their love stories.</p>
+            <p>Welcome to ${siteName}! Your email has been verified and your account is now active. We're thrilled to have you join our community where people connect to share meaningful memories and celebrate life's special moments together.</p>
           </div>
           
           <div class="feature-grid">
@@ -790,12 +790,12 @@ export function generateWelcomeEmail(data: {
             <div class="feature-card">
               <div class="icon">👥</div>
               <h3>Connect</h3>
-              <p>Invite your partner and friends to share in your journey</p>
+              <p>Invite family, friends, and loved ones to join your network</p>
             </div>
             <div class="feature-card">
               <div class="icon">📅</div>
               <h3>Timeline</h3>
-              <p>Build a chronological story of your relationship</p>
+              <p>Build chronological stories of your relationships</p>
             </div>
             <div class="feature-card">
               <div class="icon">❤️</div>
@@ -809,7 +809,7 @@ export function generateWelcomeEmail(data: {
             <ul>
               <li>Create your first memory post</li>
               <li>Customize your profile settings</li>
-              <li>Send a connection request to your partner</li>
+              <li>Send connection requests to family and friends</li>
               <li>Explore the timeline to see how it works</li>
             </ul>
           </div>

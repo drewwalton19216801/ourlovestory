@@ -101,8 +101,8 @@ export const generateMemoryMetaTags = (memory: any): MetaTagData => {
     author: memory.author_name,
     publishedTime: memory.created_at,
     modifiedTime: memory.updated_at || memory.created_at,
-    section: 'Love Stories',
-    tags: [categoryName, memory.location, 'love story', 'memories'].filter(Boolean)
+    section: 'Memories',
+    tags: [categoryName, memory.location, 'memories', 'relationships'].filter(Boolean)
   };
 };
 
@@ -256,23 +256,23 @@ export const resetMetaTags = () => {
   const siteUrl = window.location.origin;
   
   // Reset to default values
-  document.title = 'Our Love Story - Romantic Timeline';
+  document.title = 'Our Love Story - Share Life\'s Special Moments';
   
   // Reset to default OpenGraph tags
-  updateMetaTag('og:title', 'Our Love Story - Romantic Timeline');
-  updateMetaTag('og:description', 'A beautiful timeline application for couples to share and celebrate their love story together.');
+  updateMetaTag('og:title', 'Our Love Story - Share Life\'s Special Moments');
+  updateMetaTag('og:description', 'Create and share meaningful memories with the people who matter most. Connect with family, friends, and loved ones to build beautiful timelines of your relationships and celebrate life\'s special moments together.');
   updateMetaTag('og:url', siteUrl);
   updateMetaTag('og:type', 'website');
   updateMetaTag('og:image', 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
 
   // Reset Twitter Card tags
-  updateMetaTag('twitter:title', 'Our Love Story - Romantic Timeline', false);
-  updateMetaTag('twitter:description', 'A beautiful timeline application for couples to share and celebrate their love story together.', false);
+  updateMetaTag('twitter:title', 'Our Love Story - Share Life\'s Special Moments', false);
+  updateMetaTag('twitter:description', 'Create and share meaningful memories with the people who matter most. Connect with family, friends, and loved ones to build beautiful timelines of your relationships and celebrate life\'s special moments together.', false);
   updateMetaTag('twitter:image', 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', false);
 
   // Reset other meta tags
-  updateMetaTag('description', 'A beautiful timeline application for couples to share and celebrate their love story together.', false);
-  updateMetaTag('keywords', 'love story, couples, timeline, memories, romance', false);
+  updateMetaTag('description', 'Create and share meaningful memories with the people who matter most. Connect with family, friends, and loved ones to build beautiful timelines of your relationships and celebrate life\'s special moments together.', false);
+  updateMetaTag('keywords', 'memories, relationships, family, friends, timeline, connections, milestones, community, love story', false);
   updateMetaTag('robots', 'index, follow', false);
 
   // Remove memory-specific tags
