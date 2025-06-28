@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Lock, Users, Eye, User } from 'lucide-react';
+import { Settings as SettingsIcon, Lock, Users, Eye, User, UserPlus } from 'lucide-react';
 import { ProfileSettings } from '../components/Settings/ProfileSettings';
 import { PrivacySettings } from '../components/Settings/PrivacySettings';
 import { PasswordSettings } from '../components/Settings/PasswordSettings';
 import { RelationshipSettings } from '../components/Settings/RelationshipSettings';
+import { InviteFriends } from '../components/Settings/InviteFriends';
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'privacy' | 'password' | 'relationships'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'privacy' | 'password' | 'relationships' | 'invite'>('profile');
 
   const tabs = [
     {
@@ -37,6 +38,13 @@ export function Settings() {
       shortLabel: 'Connect',
       icon: Users,
       description: 'Connect with partners and friends'
+    },
+    {
+      id: 'invite' as const,
+      label: 'Invite Friends',
+      shortLabel: 'Invite',
+      icon: UserPlus,
+      description: 'Invite friends and family to join'
     }
   ];
 
@@ -60,14 +68,14 @@ export function Settings() {
 
         {/* Mobile Navigation (Horizontal Tabs) */}
         <div className="lg:hidden border-b border-white/10">
-          <div className="flex w-full">
+          <div className="flex w-full overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex flex-col items-center px-2 py-3 transition-all ${
+                  className={`flex-shrink-0 flex flex-col items-center px-3 py-3 transition-all min-w-[80px] ${
                     activeTab === tab.id
                       ? 'text-purple-300 bg-purple-500/20 border-b-2 border-purple-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -137,6 +145,7 @@ export function Settings() {
               {activeTab === 'privacy' && <PrivacySettings />}
               {activeTab === 'password' && <PasswordSettings />}
               {activeTab === 'relationships' && <RelationshipSettings />}
+              {activeTab === 'invite' && <InviteFriends />}
             </motion.div>
           </div>
         </div>
