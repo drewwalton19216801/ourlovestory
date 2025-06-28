@@ -339,12 +339,10 @@ export function MemoryCard({
             <span className="text-xs sm:text-sm">Posted {format(new Date(memory.created_at), 'MMM d, yyyy \'at\' HH:mm')}</span>
           </div>
 
-          {/* Reactions - Mobile-optimized layout */}
+          {/* Reactions - Mobile-optimized layout with color-only hover */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-white/10 gap-4">
             <div className="flex items-center justify-center sm:justify-start space-x-2 overflow-x-auto">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => handleReaction('heart')}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('heart')
@@ -354,11 +352,9 @@ export function MemoryCard({
               >
                 <Heart className="h-4 w-4" />
                 <span className="text-sm">{reactionCounts.heart}</span>
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => handleReaction('smile')}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('smile')
@@ -368,11 +364,9 @@ export function MemoryCard({
               >
                 <Smile className="h-4 w-4" />
                 <span className="text-sm">{reactionCounts.smile}</span>
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => handleReaction('celebration')}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-full transition-colors flex-shrink-0 ${
                   hasUserReacted('celebration')
@@ -382,7 +376,7 @@ export function MemoryCard({
               >
                 <Sparkles className="h-4 w-4" />
                 <span className="text-sm">{reactionCounts.celebration}</span>
-              </motion.button>
+              </button>
             </div>
 
             <motion.button
