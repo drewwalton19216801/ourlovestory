@@ -9,6 +9,7 @@ import { Memory, MemoryCategory } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { PartnerSelector } from './PartnerSelector';
 import { ImageUpload } from './ImageUpload';
+import { uploadImages } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
 interface AddMemoryFormProps {
@@ -40,7 +41,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
   const { relationships } = useRelationships();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([]);
   const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
 
   // Use user's default privacy setting if available
@@ -68,6 +69,21 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
                         user.user_metadata?.name || 
                         user.email || 
                         'Anonymous';
+      
+      // Upload images first if any are selected
+      let imageUrls: string[] = [];
+      if (newlySelectedImageFiles.length > 0) {
+        try {
+          const uploadResults = await uploadImages(newlySelectedImageFiles, user.id);
+          imageUrls = uploadResults.map(result => result.url);
+          toast.success(`${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''} uploaded successfully!`);
+        } catch (uploadError) {
+          toast.error('Failed to upload images. Please try again.');
+          console.error('Image upload error:', uploadError);
+          setIsSubmitting(false);
+          return;
+        }
+      }
       
       const memory = {
         ...data,
@@ -106,8 +122,8 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
     }
   };
 
-  const handleImagesUploaded = (newImageUrls: string[]) => {
-    setImageUrls(newImageUrls);
+  const handleNewFilesSelected = (files: File[]) => {
+    setNewlySelectedImageFiles(files);
   };
 
   return (
@@ -216,8 +232,7 @@ export function AddMemoryForm({ onAddMemory }: AddMemoryFormProps) {
               Images
             </label>
             <ImageUpload
-              onImagesUploaded={handleImagesUploaded}
-              existingImages={imageUrls}
+              onNewFilesSelected={handleNewFilesSelected}
               disabled={isSubmitting}
             />
           </div>

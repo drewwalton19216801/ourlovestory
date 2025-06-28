@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
-import { uploadImages, validateImageFiles, UploadResult } from '../../lib/storage';
+import { Upload, X, AlertCircle } from 'lucide-react';
+import { validateImageFiles } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
 interface ImageUploadProps {
-  onImagesUploaded: (imageUrls: string[]) => void;
-  existingImages: string[];
+  onNewFilesSelected: (files: File[]) => void;
   disabled?: boolean;
 }
 
@@ -16,9 +15,8 @@ interface PreviewImage {
   id: string;
 }
 
-export function ImageUpload({ onImagesUploaded, existingImages, disabled = false }: ImageUploadProps) {
+export function ImageUpload({ onNewFilesSelected, disabled = false }: ImageUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<PreviewImage[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -39,7 +37,11 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
       id: Math.random().toString(36).substring(2)
     }));
 
-    setSelectedFiles(prev => [...prev, ...newPreviews]);
+    const updatedPreviews = [...selectedFiles, ...newPreviews];
+    setSelectedFiles(updatedPreviews);
+    
+    // Notify parent component with the updated file list
+    onNewFilesSelected(updatedPreviews.map(preview => preview.file));
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,38 +77,13 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
       if (imageToRemove) {
         URL.revokeObjectURL(imageToRemove.preview);
       }
-      return prev.filter(img => img.id !== id);
+      const updatedPreviews = prev.filter(img => img.id !== id);
+      
+      // Notify parent component with the updated file list
+      onNewFilesSelected(updatedPreviews.map(preview => preview.file));
+      
+      return updatedPreviews;
     });
-  };
-
-  const removeExistingImage = (index: number) => {
-    const updatedImages = existingImages.filter((_, i) => i !== index);
-    onImagesUploaded(updatedImages);
-  };
-
-  const uploadSelectedImages = async () => {
-    if (selectedFiles.length === 0) return;
-
-    setUploading(true);
-    try {
-      const files = selectedFiles.map(preview => preview.file);
-      const uploadResults: UploadResult[] = await uploadImages(files);
-      
-      const newImageUrls = uploadResults.map(result => result.url);
-      const allImages = [...existingImages, ...newImageUrls];
-      
-      onImagesUploaded(allImages);
-      
-      // Clean up preview URLs
-      selectedFiles.forEach(preview => URL.revokeObjectURL(preview.preview));
-      setSelectedFiles([]);
-      
-      toast.success(`${newImageUrls.length} image${newImageUrls.length > 1 ? 's' : ''} uploaded successfully!`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to upload images');
-    } finally {
-      setUploading(false);
-    }
   };
 
   const triggerFileInput = () => {
@@ -169,20 +146,9 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
             exit={{ opacity: 0, height: 0 }}
             className="space-y-3"
           >
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">
-                Selected Images ({selectedFiles.length})
-              </h4>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={uploadSelectedImages}
-                disabled={uploading || disabled}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-              >
-                {uploading ? 'Uploading...' : 'Upload Images'}
-              </motion.button>
-            </div>
+            <h4 className="text-sm font-medium text-gray-300">
+              Selected Images ({selectedFiles.length})
+            </h4>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {selectedFiles.map((preview) => (
@@ -205,7 +171,7 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
                       e.stopPropagation();
                       removePreviewImage(preview.id);
                     }}
-                    disabled={uploading}
+                    disabled={disabled}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                   >
                     <X className="h-3 w-3" />
@@ -217,40 +183,6 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
         )}
       </AnimatePresence>
 
-      {/* Existing Images */}
-      {existingImages.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-300">
-            Uploaded Images ({existingImages.length})
-          </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {existingImages.map((imageUrl, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative group"
-              >
-                <img
-                  src={imageUrl}
-                  alt={`Uploaded ${index + 1}`}
-                  className="w-full h-24 object-cover rounded-lg border border-white/20"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => removeExistingImage(index)}
-                  disabled={disabled}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-                >
-                  <X className="h-3 w-3" />
-                </motion.button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Upload Constraints Info */}
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
         <div className="flex items-start space-x-2">
@@ -261,7 +193,7 @@ export function ImageUpload({ onImagesUploaded, existingImages, disabled = false
               <li>• Supported formats: JPEG, PNG, GIF, WebP</li>
               <li>• Maximum file size: 5MB per image</li>
               <li>• Maximum images per memory: 10</li>
-              <li>• Images are automatically optimized for web viewing</li>
+              <li>• Images will be uploaded when you save the memory</li>
             </ul>
           </div>
         </div>
