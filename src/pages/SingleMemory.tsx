@@ -5,6 +5,28 @@ import { ArrowLeft, Heart, AlertCircle } from 'lucide-react';
 import { MemoryCard } from '../components/Memory/MemoryCard';
 import { useSingleMemory } from '../hooks/useMemories';
 import { useAuth } from '../contexts/AuthContext';
+import { format } from 'date-fns';
+
+// Helper function to truncate text for meta descriptions
+const truncateText = (text: string, maxLength: number = 160): string => {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - 3).trim() + '...';
+};
+
+// Helper function to get category display name
+const getCategoryDisplayName = (category: string): string => {
+  const categoryLabels: Record<string, string> = {
+    first_date: 'First Date',
+    anniversary: 'Anniversary',
+    proposal: 'Proposal',
+    wedding: 'Wedding',
+    vacation: 'Vacation',
+    milestone: 'Milestone',
+    special_moment: 'Special Moment',
+    everyday_joy: 'Everyday Joy',
+  };
+  return categoryLabels[category] || category;
+};
 
 // Helper function to update OpenGraph meta tags
 const updateMetaTags = (memory: any) => {
@@ -26,36 +48,150 @@ const updateMetaTags = (memory: any) => {
     }
   };
 
-  // Update page title
-  document.title = `${memory.title} - Our Love Story`;
+  // Enhanced description with additional context
+  const baseDescription = truncateText(memory.description, 140);
+  const categoryName = getCategoryDisplayName(memory.category);
+  const memoryDate = format(new Date(memory.created_at), 'MMMM d, yyyy');
+  
+  let enhancedDescription = baseDescription;
+  if (memory.location) {
+    enhancedDescription += ` • ${memory.location}`;
+  }
+  enhancedDescription += ` • ${categoryName} from ${memoryDate}`;
+  
+  // Ensure final description doesn't exceed 160 characters
+  enhancedDescription = truncateText(enhancedDescription, 160);
 
-  // Update OpenGraph tags
+  // Update page title with more context
+  const pageTitle = `${memory.title} - ${categoryName} by ${memory.author_name} | Our Love Story`;
+  document.title = pageTitle;
+
+  // Update basic OpenGraph tags
   updateMetaTag('og:title', memory.title);
-  updateMetaTag('og:description', memory.description);
+  updateMetaTag('og:description', enhancedDescription);
   updateMetaTag('og:url', memoryUrl);
   updateMetaTag('og:type', 'article');
+  updateMetaTag('og:site_name', 'Our Love Story');
+  updateMetaTag('og:locale', 'en_US');
   
-  // Use first image if available, otherwise use default
-  const imageUrl = memory.images && memory.images.length > 0 
+  // Image handling with fallback
+  const primaryImage = memory.images && memory.images.length > 0 
     ? memory.images[0] 
     : 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
-  updateMetaTag('og:image', imageUrl);
+  
+  updateMetaTag('og:image', primaryImage);
+  updateMetaTag('og:image:width', '1260');
+  updateMetaTag('og:image:height', '750');
+  updateMetaTag('og:image:alt', `${memory.title} - ${categoryName} memory shared by ${memory.author_name}`);
+  
+  // If there are multiple images, add them as additional og:image tags
+  if (memory.images && memory.images.length > 1) {
+    memory.images.slice(1, 4).forEach((imageUrl: string, index: number) => {
+      // Remove any existing additional image tags first
+      const existingImage = document.querySelector(`meta[property="og:image"][data-index="${index + 1}"]`);
+      if (existingImage) {
+        existingImage.remove();
+      }
+      
+      // Add new image tag
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image');
+      meta.setAttribute('content', imageUrl);
+      meta.setAttribute('data-index', (index + 1).toString());
+      document.head.appendChild(meta);
+    });
+  }
 
   // Update Twitter Card tags
   updateMetaTag('twitter:card', 'summary_large_image', false);
   updateMetaTag('twitter:title', memory.title, false);
-  updateMetaTag('twitter:description', memory.description, false);
-  updateMetaTag('twitter:image', imageUrl, false);
+  updateMetaTag('twitter:description', enhancedDescription, false);
+  updateMetaTag('twitter:image', primaryImage, false);
+  updateMetaTag('twitter:image:alt', `${memory.title} - ${categoryName} memory`, false);
 
-  // Add article-specific meta tags
+  // Article-specific meta tags
   updateMetaTag('article:author', memory.author_name);
   updateMetaTag('article:published_time', memory.created_at);
-  updateMetaTag('article:modified_time', memory.updated_at);
+  updateMetaTag('article:modified_time', memory.updated_at || memory.created_at);
+  updateMetaTag('article:section', 'Love Stories');
   
+  // Add tags for category and location
+  updateMetaTag('article:tag', categoryName);
   if (memory.location) {
     updateMetaTag('article:tag', memory.location);
   }
-  updateMetaTag('article:tag', memory.category);
+  
+  // Add participants as tags if available
+  if (memory.participants && memory.participants.length > 0) {
+    memory.participants.forEach((participant: any) => {
+      if (participant.user_name && participant.user_name !== memory.author_name) {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'article:tag');
+        meta.setAttribute('content', participant.user_name);
+        meta.setAttribute('data-participant', 'true');
+        document.head.appendChild(meta);
+      }
+    });
+  }
+
+  // Additional meta tags for better SEO
+  updateMetaTag('description', enhancedDescription, false);
+  updateMetaTag('keywords', `love story, ${categoryName.toLowerCase()}, memories, ${memory.location || 'relationship'}, ${memory.author_name}`, false);
+  updateMetaTag('author', memory.author_name, false);
+  
+  // Privacy-related meta tags
+  if (!memory.is_public) {
+    updateMetaTag('robots', 'noindex, nofollow', false);
+  } else {
+    updateMetaTag('robots', 'index, follow', false);
+  }
+
+  // Structured data for rich snippets
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": memory.title,
+    "description": enhancedDescription,
+    "image": memory.images && memory.images.length > 0 ? memory.images : [primaryImage],
+    "author": {
+      "@type": "Person",
+      "name": memory.author_name,
+      "url": `${siteUrl}/profile/${memory.author_id}`
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Our Love Story",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${siteUrl}/vite.svg`
+      }
+    },
+    "datePublished": memory.created_at,
+    "dateModified": memory.updated_at || memory.created_at,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": memoryUrl
+    },
+    "url": memoryUrl,
+    "articleSection": "Love Stories",
+    "keywords": [categoryName, memory.location, 'love story', 'memories'].filter(Boolean).join(', '),
+    "about": {
+      "@type": "Thing",
+      "name": categoryName
+    }
+  };
+
+  // Add or update structured data script
+  let structuredDataScript = document.querySelector('script[type="application/ld+json"][data-memory]');
+  if (structuredDataScript) {
+    structuredDataScript.textContent = JSON.stringify(structuredData);
+  } else {
+    structuredDataScript = document.createElement('script');
+    structuredDataScript.type = 'application/ld+json';
+    structuredDataScript.setAttribute('data-memory', 'true');
+    structuredDataScript.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(structuredDataScript);
+  }
 };
 
 // Helper function to reset meta tags to defaults
@@ -85,14 +221,36 @@ const resetMetaTags = () => {
   updateMetaTag('twitter:description', 'A beautiful timeline application for couples to share and celebrate their love story together.', false);
   updateMetaTag('twitter:image', 'https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', false);
 
-  // Remove article-specific tags
-  const articleTags = ['article:author', 'article:published_time', 'article:modified_time', 'article:tag'];
-  articleTags.forEach(tag => {
-    const meta = document.querySelector(`meta[property="${tag}"]`);
-    if (meta) {
-      meta.remove();
-    }
+  // Reset other meta tags
+  updateMetaTag('description', 'A beautiful timeline application for couples to share and celebrate their love story together.', false);
+  updateMetaTag('keywords', 'love story, couples, timeline, memories, romance', false);
+  updateMetaTag('robots', 'index, follow', false);
+
+  // Remove memory-specific tags
+  const memorySpecificTags = [
+    'article:author', 'article:published_time', 'article:modified_time', 
+    'article:section', 'article:tag', 'og:image:width', 'og:image:height', 
+    'og:image:alt', 'twitter:image:alt'
+  ];
+  
+  memorySpecificTags.forEach(tag => {
+    const metas = document.querySelectorAll(`meta[property="${tag}"], meta[name="${tag}"]`);
+    metas.forEach(meta => meta.remove());
   });
+
+  // Remove additional og:image tags
+  const additionalImages = document.querySelectorAll('meta[property="og:image"][data-index]');
+  additionalImages.forEach(meta => meta.remove());
+
+  // Remove participant tags
+  const participantTags = document.querySelectorAll('meta[data-participant="true"]');
+  participantTags.forEach(meta => meta.remove());
+
+  // Remove structured data
+  const structuredDataScript = document.querySelector('script[type="application/ld+json"][data-memory]');
+  if (structuredDataScript) {
+    structuredDataScript.remove();
+  }
 };
 
 export function SingleMemory() {
@@ -271,7 +429,7 @@ export function SingleMemory() {
             <p className="text-purple-300 font-medium mb-1">Share This Memory</p>
             <p className="text-purple-200/80">
               This memory has its own dedicated page that you can share on social media. 
-              When shared, it will display the memory's title, description, and images for a rich preview.
+              When shared, it will display the memory's title, description, images, and all relevant details for a rich preview.
               Use the "Copy Post Link" option to get a direct link to this memory.
             </p>
           </div>
