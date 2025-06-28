@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, UserPlus, Heart, Check, X, Mail, Trash2 } from 'lucide-react';
+import { Users, UserPlus, Heart, Check, X, Mail, Trash2, Clock, ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useRelationships } from '../../hooks/useRelationships';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,11 +23,13 @@ interface FindUserResponse {
 }
 
 export function RelationshipSettings() {
-  const { relationships, pendingRequests, respondToRequest, removeRelationship, refetch } = useRelationships();
+  const { relationships, pendingRequests, sentRequests, respondToRequest, rescindRequest, removeRelationship, refetch } = useRelationships();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [rescindModalOpen, setRescindModalOpen] = useState(false);
   const [relationshipToDelete, setRelationshipToDelete] = useState<string | null>(null);
+  const [requestToRescind, setRequestToRescind] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<RelationshipRequestData>();
 
@@ -122,6 +124,29 @@ export function RelationshipSettings() {
     } catch (error) {
       toast.error('Failed to decline request');
     }
+  };
+
+  const handleRescindClick = (requestId: string) => {
+    setRequestToRescind(requestId);
+    setRescindModalOpen(true);
+  };
+
+  const handleConfirmRescind = async () => {
+    if (!requestToRescind) return;
+
+    try {
+      await rescindRequest(requestToRescind);
+      toast.success('Request rescinded successfully');
+      setRescindModalOpen(false);
+      setRequestToRescind(null);
+    } catch (error) {
+      toast.error('Failed to rescind request');
+    }
+  };
+
+  const handleCancelRescind = () => {
+    setRescindModalOpen(false);
+    setRequestToRescind(null);
   };
 
   const handleDeleteClick = (relationshipId: string) => {
@@ -227,7 +252,46 @@ export function RelationshipSettings() {
           </form>
         </motion.div>
 
-        {/* Pending Requests */}
+        {/* Sent Requests (Outgoing) */}
+        {sentRequests.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
+          >
+            <h3 className="text-base sm:text-lg font-medium text-white mb-4 flex items-center space-x-2">
+              <Clock className="h-5 w-5 text-blue-400" />
+              <span>Sent Requests</span>
+              <span className="text-sm text-gray-400">({sentRequests.length})</span>
+            </h3>
+            <div className="space-y-3">
+              {sentRequests.map((request) => (
+                <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg gap-3">
+                  <div>
+                    <p className="text-white font-medium">{request.partner_name}</p>
+                    <p className="text-sm text-gray-400 capitalize">
+                      {request.relationship_type} • Sent {format(new Date(request.created_at), 'MMM d, yyyy')}
+                    </p>
+                    <p className="text-xs text-blue-300 mt-1">Waiting for response</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleRescindClick(request.id)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-sm font-medium self-end sm:self-center border border-red-500/30"
+                    title="Rescind request"
+                  >
+                    <ArrowLeft className="h-3 w-3" />
+                    <span>Rescind</span>
+                  </motion.button>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Pending Requests (Incoming) */}
         {pendingRequests.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -235,10 +299,14 @@ export function RelationshipSettings() {
             transition={{ delay: 0.1 }}
             className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
           >
-            <h3 className="text-base sm:text-lg font-medium text-white mb-4">Pending Requests</h3>
+            <h3 className="text-base sm:text-lg font-medium text-white mb-4 flex items-center space-x-2">
+              <Users className="h-5 w-5 text-yellow-400" />
+              <span>Pending Requests</span>
+              <span className="text-sm text-gray-400">({pendingRequests.length})</span>
+            </h3>
             <div className="space-y-3">
               {pendingRequests.map((request) => (
-                <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white/5 rounded-lg gap-3">
+                <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-lg gap-3">
                   <div>
                     <p className="text-white font-medium">{request.partner_name}</p>
                     <p className="text-sm text-gray-400 capitalize">
@@ -250,17 +318,19 @@ export function RelationshipSettings() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleAcceptRequest(request.id)}
-                      className="p-2 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30 transition-colors"
+                      className="flex items-center space-x-1 px-3 py-2 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30 transition-colors text-sm font-medium border border-green-500/30"
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-3 w-3" />
+                      <span>Accept</span>
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleDeclineRequest(request.id)}
-                      className="p-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors"
+                      className="flex items-center space-x-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-sm font-medium border border-red-500/30"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3" />
+                      <span>Decline</span>
                     </motion.button>
                   </div>
                 </div>
@@ -277,10 +347,14 @@ export function RelationshipSettings() {
             transition={{ delay: 0.2 }}
             className="bg-white/5 rounded-lg p-4 sm:p-6 border border-white/10"
           >
-            <h3 className="text-base sm:text-lg font-medium text-white mb-4">Connected Partners</h3>
+            <h3 className="text-base sm:text-lg font-medium text-white mb-4 flex items-center space-x-2">
+              <Heart className="h-5 w-5 text-green-400" />
+              <span>Connected Partners</span>
+              <span className="text-sm text-gray-400">({relationships.length})</span>
+            </h3>
             <div className="space-y-3">
               {relationships.map((relationship) => (
-                <div key={relationship.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-white/5 rounded-lg gap-3">
+                <div key={relationship.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-green-500/5 border border-green-500/20 rounded-lg gap-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium text-purple-300">
@@ -292,6 +366,8 @@ export function RelationshipSettings() {
                       <p className="text-sm text-gray-400 capitalize">
                         {relationship.relationship_type}
                         {relationship.is_primary && ' • Primary'}
+                        {' • Connected '}
+                        {format(new Date(relationship.updated_at), 'MMM d, yyyy')}
                       </p>
                     </div>
                   </div>
@@ -299,10 +375,11 @@ export function RelationshipSettings() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleDeleteClick(relationship.id)}
-                    className="p-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors self-end sm:self-center"
+                    className="flex items-center space-x-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors self-end sm:self-center text-sm font-medium border border-red-500/30"
                     title="Remove relationship"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3" />
+                    <span>Remove</span>
                   </motion.button>
                 </div>
               ))}
@@ -324,6 +401,7 @@ export function RelationshipSettings() {
               <ul className="text-blue-200/80 space-y-1">
                 <li>• Connected partners can be tagged in memories and see private posts shared with them</li>
                 <li>• Relationship requests must be accepted by both parties</li>
+                <li>• You can rescind (cancel) requests you've sent before they're responded to</li>
                 <li>• You can have multiple relationships of different types</li>
                 <li>• Either party can remove a relationship at any time</li>
               </ul>
@@ -331,6 +409,18 @@ export function RelationshipSettings() {
           </div>
         </motion.div>
       </div>
+
+      {/* Rescind Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={rescindModalOpen}
+        onClose={handleCancelRescind}
+        onConfirm={handleConfirmRescind}
+        title="Rescind Request"
+        message="Are you sure you want to rescind this relationship request? The recipient will no longer see your request."
+        confirmText="Rescind"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

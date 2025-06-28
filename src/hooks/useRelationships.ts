@@ -7,6 +7,7 @@ import { generateRelationshipRequestEmail } from '../lib/emailTemplates';
 export function useRelationships() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Relationship[]>([]);
+  const [sentRequests, setSentRequests] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -42,13 +43,20 @@ export function useRelationships() {
       }));
 
       const accepted = relationshipsWithPartnerInfo.filter(r => r.status === 'accepted');
-      // Only show pending requests where the current user is the RECEIVER
-      const pending = relationshipsWithPartnerInfo.filter(r => 
+      
+      // Incoming requests: where current user is the RECEIVER
+      const incoming = relationshipsWithPartnerInfo.filter(r => 
         r.status === 'pending' && r.receiver_id === user.id
       );
 
+      // Outgoing requests: where current user is the REQUESTER
+      const outgoing = relationshipsWithPartnerInfo.filter(r => 
+        r.status === 'pending' && r.requester_id === user.id
+      );
+
       setRelationships(accepted);
-      setPendingRequests(pending);
+      setPendingRequests(incoming);
+      setSentRequests(outgoing);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch relationships');
     } finally {
@@ -218,6 +226,56 @@ export function useRelationships() {
     }
   };
 
+  const rescindRequest = async (relationshipId: string) => {
+    if (!user) {
+      throw new Error('User must be authenticated to rescind requests');
+    }
+
+    try {
+      // First, verify that the current user is the requester of this request
+      const { data: relationship, error: fetchError } = await supabase
+        .from('relationships')
+        .select('requester_id, status')
+        .eq('id', relationshipId)
+        .single();
+
+      if (fetchError) {
+        throw new Error('Failed to find relationship request');
+      }
+
+      if (!relationship) {
+        throw new Error('Relationship request not found');
+      }
+
+      if (relationship.requester_id !== user.id) {
+        throw new Error('You can only rescind requests you sent');
+      }
+
+      if (relationship.status !== 'pending') {
+        throw new Error('This request has already been responded to and cannot be rescinded');
+      }
+
+      // Delete the relationship request
+      const { error } = await supabase
+        .from('relationships')
+        .delete()
+        .eq('id', relationshipId)
+        .eq('requester_id', user.id) // Double-check security
+        .eq('status', 'pending'); // Only delete if still pending
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new Error('Request not found or you do not have permission to rescind it');
+        }
+        throw error;
+      }
+
+      await fetchRelationships();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to rescind request');
+    }
+  };
+
   const removeRelationship = async (relationshipId: string) => {
     if (!user) {
       throw new Error('User must be authenticated to remove relationships');
@@ -283,10 +341,12 @@ export function useRelationships() {
   return {
     relationships,
     pendingRequests,
+    sentRequests,
     loading,
     error,
     sendRelationshipRequest,
     respondToRequest,
+    rescindRequest,
     removeRelationship,
     updateRelationship,
     refetch: fetchRelationships,
