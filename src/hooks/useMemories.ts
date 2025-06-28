@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Memory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { deleteImages, extractStoragePath } from '../lib/storage';
+import { deleteImages, extractStoragePath, uploadImages } from '../lib/storage';
 
 export function useMemories(publicOnly = false, authorId?: string) {
   const [memories, setMemories] = useState<Memory[]>([]);
@@ -176,6 +176,111 @@ export function useMemories(publicOnly = false, authorId?: string) {
       return data;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to add memory');
+    }
+  };
+
+  const updateMemory = async (
+    memoryId: string, 
+    updates: Partial<Memory>,
+    existingImageUrls: string[] = [],
+    newlySelectedImageFiles: File[] = []
+  ) => {
+    try {
+      // Find the current memory to get existing images
+      const currentMemory = memories.find(m => m.id === memoryId);
+      if (!currentMemory) {
+        throw new Error('Memory not found');
+      }
+
+      // Determine which images to delete
+      const currentImageUrls = currentMemory.images || [];
+      const imagesToDelete = currentImageUrls.filter(url => !existingImageUrls.includes(url));
+
+      // Delete images that are no longer needed
+      if (imagesToDelete.length > 0) {
+        try {
+          const imagePaths = imagesToDelete
+            .map(url => extractStoragePath(url))
+            .filter(path => path !== null) as string[];
+          
+          if (imagePaths.length > 0) {
+            await deleteImages(imagePaths);
+          }
+        } catch (imageError) {
+          console.warn('Failed to delete some images from storage:', imageError);
+          // Continue with update even if image deletion fails
+        }
+      }
+
+      // Upload new images
+      let newImageUrls: string[] = [];
+      if (newlySelectedImageFiles.length > 0) {
+        try {
+          const uploadResults = await uploadImages(newlySelectedImageFiles, user?.id);
+          newImageUrls = uploadResults.map(result => result.url);
+        } catch (uploadError) {
+          throw new Error('Failed to upload new images. Please try again.');
+        }
+      }
+
+      // Combine existing and new image URLs
+      const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+
+      // Prepare the update object
+      const updateData = {
+        ...updates,
+        images: finalImageUrls,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update the memory in the database
+      const { data, error } = await supabase
+        .from('memories')
+        .update(updateData)
+        .eq('id', memoryId)
+        .select(`
+          *,
+          reactions(*),
+          comments(*),
+          participants:memory_participants(*)
+        `)
+        .single();
+
+      if (error) {
+        // Handle foreign key relationship errors during update
+        if (error.code === 'PGRST200' && error.message.includes('relationship')) {
+          const { data: simpleData, error: simpleError } = await supabase
+            .from('memories')
+            .update(updateData)
+            .eq('id', memoryId)
+            .select('*')
+            .single();
+
+          if (simpleError) throw simpleError;
+
+          const memoryWithRelations = {
+            ...simpleData,
+            reactions: currentMemory.reactions || [],
+            comments: currentMemory.comments || [],
+            participants: currentMemory.participants || []
+          };
+
+          setMemories(prev => prev.map(memory => 
+            memory.id === memoryId ? memoryWithRelations : memory
+          ));
+          return memoryWithRelations;
+        }
+        throw error;
+      }
+
+      // Update local state
+      setMemories(prev => prev.map(memory => 
+        memory.id === memoryId ? data : memory
+      ));
+      
+      return data;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to update memory');
     }
   };
 
@@ -375,6 +480,7 @@ export function useMemories(publicOnly = false, authorId?: string) {
     loading,
     error,
     addMemory,
+    updateMemory,
     deleteMemory,
     addReaction,
     removeReaction,

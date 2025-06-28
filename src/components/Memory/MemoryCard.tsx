@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink, X } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Heart, Smile, Sparkles, MapPin, Calendar, MessageCircle, Lock, Globe, Users, Trash2, MoreVertical, Clock, Link, ExternalLink, X, Edit3 } from 'lucide-react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Memory } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ConfirmationModal } from '../UI/ConfirmationModal';
@@ -50,6 +50,7 @@ export function MemoryCard({
   showViewPostLink = true 
 }: MemoryCardProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
@@ -87,7 +88,13 @@ export function MemoryCard({
     setShowComments(!showComments);
   };
 
+  const canEditMemory = user && user.id === memory.author_id;
   const canDeleteMemory = user && user.id === memory.author_id;
+
+  const handleEditClick = () => {
+    navigate(`/edit-memory/${memory.id}`);
+    setShowActions(false);
+  };
 
   const handleDeleteClick = () => {
     setDeleteModalOpen(true);
@@ -216,6 +223,17 @@ export function MemoryCard({
                             >
                               <ExternalLink className="h-4 w-4" />
                               <span className="font-medium">View Full Post</span>
+                            </motion.button>
+                          )}
+
+                          {canEditMemory && (
+                            <motion.button
+                              whileHover={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+                              onClick={handleEditClick}
+                              className="flex items-center space-x-3 w-full px-4 py-3 text-left text-green-400 hover:text-green-300 transition-all"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                              <span className="font-medium">Edit Memory</span>
                             </motion.button>
                           )}
 
