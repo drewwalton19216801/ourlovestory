@@ -34,16 +34,36 @@ export function useProfile(targetUserId?: string) {
           // Extract a reasonable display name from user metadata or email
           let displayName = 'Anonymous';
           
-          // Try to get name from user metadata
-          if (user.user_metadata?.name && user.user_metadata.name !== user.email) {
+          // Try to get name from user metadata (this should be the name from signup)
+          if (user.user_metadata?.name) {
             displayName = user.user_metadata.name;
+            
+            // Check if the name looks like an email address
+            if (displayName.includes('@') && displayName.includes('.')) {
+              // Extract the part before @ and capitalize first letter
+              const emailPrefix = displayName.split('@')[0];
+              if (emailPrefix.length > 1) {
+                displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+              } else {
+                displayName = 'Anonymous';
+              }
+            }
+          } else if (user.user_metadata?.display_name) {
+            displayName = user.user_metadata.display_name;
+          } else if (user.user_metadata?.full_name) {
+            displayName = user.user_metadata.full_name;
           } else if (user.email) {
             // Extract name from email (before @ symbol) as last resort
             const emailPrefix = user.email.split('@')[0];
-            // Only use if it doesn't look like a random string
-            if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
+            // Only use if it doesn't look like a random string and has reasonable length
+            if (emailPrefix.length > 1 && !emailPrefix.includes('+')) {
               displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
             }
+          }
+
+          // Ensure minimum length
+          if (displayName.length < 2) {
+            displayName = 'Anonymous';
           }
 
           const { data: newProfile, error: createError } = await supabase
@@ -51,6 +71,8 @@ export function useProfile(targetUserId?: string) {
             .insert([{
               id: user.id,
               display_name: displayName,
+              relationship_status: 'single',
+              is_public_profile: true,
               default_post_privacy: true // Default to public posts
             }])
             .select()

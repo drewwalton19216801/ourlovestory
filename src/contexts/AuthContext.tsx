@@ -101,13 +101,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    // Create user with Supabase Auth (without automatic email confirmation)
+    // Validate name input
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      throw new Error('Display name must be at least 2 characters long');
+    }
+
+    // Create user with Supabase Auth and ensure name is stored in metadata
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          name: name
+          name: trimmedName,
+          display_name: trimmedName,
+          full_name: trimmedName
         }
       }
     });
@@ -117,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       // Send custom verification email via Resend
       try {
-        await sendVerificationEmail(data.user, name);
+        await sendVerificationEmail(data.user, trimmedName);
         
         // Sign out the user immediately since they need to verify email first
         await supabase.auth.signOut();
@@ -155,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('This email is already verified. You can sign in normally.');
       }
       
-      const userName = user.user_metadata?.name || user.email || 'User';
+      const userName = user.user_metadata?.name || user.user_metadata?.display_name || user.email || 'User';
       await sendVerificationEmail(user, userName);
       
       toast.success('Verification email sent! Please check your inbox.');
