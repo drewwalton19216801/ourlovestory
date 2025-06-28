@@ -126,7 +126,7 @@ export function MemoryCard({
   };
 
   const handleViewPost = () => {
-    window.open(`/memory/${memory.id}`, '_blank');
+    navigate(`/memory/${memory.id}`);
     setShowActions(false);
   };
 
