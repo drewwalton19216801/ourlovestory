@@ -181,14 +181,13 @@ export function SingleMemory() {
         />
       </motion.div>
 
-      {/* Share Information with debugging info */}
+      {/* Share Information */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="mt-8 space-y-4"
+        className="mt-8"
       >
-        {/* Share Information */}
         <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
           <div className="flex items-start space-x-3">
             <Heart className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
@@ -203,36 +202,9 @@ export function SingleMemory() {
           </div>
         </div>
 
-        {/* Important Notice about Social Media Sharing */}
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm">
-              <p className="text-yellow-300 font-medium mb-1">Social Media Sharing Notice</p>
-              <p className="text-yellow-200/80 leading-relaxed">
-                <strong>Important:</strong> Social media platforms (Facebook, Twitter, LinkedIn) cache link previews and don't execute JavaScript when crawling pages. 
-                This means they will show the default site description instead of the specific memory details.
-              </p>
-              <div className="mt-3 space-y-2">
-                <p className="text-yellow-200/80 text-xs">
-                  <strong>Current workarounds:</strong>
-                </p>
-                <ul className="text-yellow-200/70 text-xs space-y-1 ml-4">
-                  <li>• Force Facebook to refresh: Use the <a href="https://developers.facebook.com/tools/debug/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-300">Facebook Sharing Debugger</a></li>
-                  <li>• Force Twitter to refresh: Delete and re-post the tweet</li>
-                  <li>• LinkedIn: Clear the URL from the post box and re-paste it</li>
-                </ul>
-                <p className="text-yellow-200/70 text-xs mt-2">
-                  For production use, consider implementing server-side rendering (SSR) or a prerender service for social media bots.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Debug Info (only show in development) */}
         {process.env.NODE_ENV === 'development' && (
-          <details className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
+          <details className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4 mt-4">
             <summary className="text-gray-300 font-medium mb-2 cursor-pointer">Debug: Current Meta Tags</summary>
             <div className="text-xs font-mono text-gray-400 space-y-1">
               <div>Title: {document.title}</div>
