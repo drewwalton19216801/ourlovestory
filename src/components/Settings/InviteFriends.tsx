@@ -17,7 +17,7 @@ interface InvitationResult {
 }
 
 export function InviteFriends() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentInvitations, setRecentInvitations] = useState<InvitationResult[]>([]);
@@ -37,7 +37,7 @@ export function InviteFriends() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
