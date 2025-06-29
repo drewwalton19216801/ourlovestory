@@ -31,16 +31,22 @@ export function useNotifications() {
   // Helper function to fetch memory details
   const fetchMemoryDetails = async (memoryId: string) => {
     try {
+      console.log('[Notifications] Fetching memory details for:', memoryId);
       const { data: memory, error } = await supabase
         .from('memories')
         .select('id, title, author_id, author_name')
         .eq('id', memoryId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Notifications] Error fetching memory details:', error);
+        throw error;
+      }
+      
+      console.log('[Notifications] Memory details fetched:', memory);
       return memory;
     } catch (error) {
-      console.error('Error fetching memory details:', error);
+      console.error('[Notifications] Error fetching memory details:', error);
       return null;
     }
   };
@@ -48,6 +54,7 @@ export function useNotifications() {
   // Helper function to get user display name with UUID protection
   const getUserDisplayName = async (userId: string): Promise<string> => {
     try {
+      console.log('[Notifications] Getting display name for user:', userId);
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('display_name')
@@ -58,6 +65,7 @@ export function useNotifications() {
         // Check if display_name is a UUID pattern
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidPattern.test(profile.display_name)) {
+          console.log('[Notifications] Display name is UUID, returning Anonymous');
           return 'Anonymous';
         }
         
@@ -66,15 +74,21 @@ export function useNotifications() {
           // Try to extract a better name from email
           const emailPrefix = profile.display_name.split('@')[0];
           if (emailPrefix.length > 2 && !emailPrefix.includes('+')) {
-            return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+            const result = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+            console.log('[Notifications] Converted email to display name:', result);
+            return result;
           }
+          console.log('[Notifications] Email prefix too short, returning Anonymous');
           return 'Anonymous';
         }
+        console.log('[Notifications] Using profile display name:', profile.display_name);
         return profile.display_name;
       }
       
+      console.log('[Notifications] No display name found, returning Anonymous');
       return 'Anonymous';
-    } catch {
+    } catch (error) {
+      console.error('[Notifications] Error getting display name:', error);
       return 'Anonymous';
     }
   };
@@ -82,9 +96,12 @@ export function useNotifications() {
   // Convert pending relationship requests to notifications
   useEffect(() => {
     if (!user) {
+      console.log('[Notifications] No user, clearing notifications');
       setNotifications([]);
       return;
     }
+
+    console.log('[Notifications] Converting pending requests to notifications:', pendingRequests.length);
 
     const relationshipNotifications: Notification[] = pendingRequests.map(request => ({
       id: `relationship_${request.id}`,
@@ -103,15 +120,20 @@ export function useNotifications() {
     setNotifications(prev => {
       // Keep existing non-relationship notifications and add new relationship ones
       const nonRelationshipNotifications = prev.filter(n => n.type !== 'relationship_request');
-      return [...nonRelationshipNotifications, ...relationshipNotifications];
+      const combined = [...nonRelationshipNotifications, ...relationshipNotifications];
+      console.log('[Notifications] Updated notifications count:', combined.length);
+      return combined;
     });
   }, [user, pendingRequests, location.pathname]);
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions - REMOVED location.pathname dependency
   useEffect(() => {
     if (!user) {
+      console.log('[Notifications] No user, skipping real-time setup');
       return;
     }
+
+    console.log('[Notifications] Setting up real-time subscriptions for user:', user.id);
 
     // Subscribe to new relationship requests
     const relationshipChannel = supabase
@@ -125,11 +147,12 @@ export function useNotifications() {
           filter: `receiver_id=eq.${user.id}`
         },
         async (payload) => {
-          console.log('New relationship request received:', payload);
+          console.log('[Notifications] New relationship request received:', payload);
           
           if (payload.new.status === 'pending') {
             // Get requester's display name
             const requesterName = await getUserDisplayName(payload.new.requester_id);
+            console.log('[Notifications] Requester name resolved:', requesterName);
             
             const notification: Notification = {
               id: `relationship_${payload.new.id}`,
@@ -145,12 +168,16 @@ export function useNotifications() {
               }
             };
 
+            console.log('[Notifications] Adding relationship notification:', notification);
+
             setNotifications(prev => {
               // Check if notification already exists
               const exists = prev.some(n => n.id === notification.id);
               if (!exists) {
+                console.log('[Notifications] Notification added to state');
                 return [notification, ...prev];
               }
+              console.log('[Notifications] Notification already exists, skipping');
               return prev;
             });
           }
@@ -169,10 +196,11 @@ export function useNotifications() {
           table: 'reactions'
         },
         async (payload) => {
-          console.log('New reaction received:', payload);
+          console.log('[Notifications] New reaction received:', payload);
           
           // Don't notify about own reactions
           if (payload.new.user_id === user.id) {
+            console.log('[Notifications] Skipping own reaction');
             return;
           }
 
@@ -180,6 +208,7 @@ export function useNotifications() {
           const memory = await fetchMemoryDetails(payload.new.memory_id);
           
           if (memory && memory.author_id === user.id) {
+            console.log('[Notifications] Reaction is on current user\'s memory, creating notification');
             const reactionEmoji = {
               heart: '❤️',
               smile: '😊',
@@ -201,13 +230,23 @@ export function useNotifications() {
               }
             };
 
+            console.log('[Notifications] Adding reaction notification:', notification);
+
             setNotifications(prev => {
               // Check if notification already exists
               const exists = prev.some(n => n.id === notification.id);
               if (!exists) {
+                console.log('[Notifications] Reaction notification added to state');
                 return [notification, ...prev];
               }
+              console.log('[Notifications] Reaction notification already exists, skipping');
               return prev;
+            });
+          } else {
+            console.log('[Notifications] Reaction not on current user\'s memory or memory not found:', {
+              memoryFound: !!memory,
+              memoryAuthor: memory?.author_id,
+              currentUser: user.id
             });
           }
         }
@@ -225,10 +264,11 @@ export function useNotifications() {
           table: 'comments'
         },
         async (payload) => {
-          console.log('New comment received:', payload);
+          console.log('[Notifications] New comment received:', payload);
           
           // Don't notify about own comments
           if (payload.new.user_id === user.id) {
+            console.log('[Notifications] Skipping own comment');
             return;
           }
 
@@ -236,6 +276,7 @@ export function useNotifications() {
           const memory = await fetchMemoryDetails(payload.new.memory_id);
           
           if (memory && memory.author_id === user.id) {
+            console.log('[Notifications] Comment is on current user\'s memory, creating notification');
             const notification: Notification = {
               id: `comment_${payload.new.id}`,
               type: 'memory_comment',
@@ -250,13 +291,23 @@ export function useNotifications() {
               }
             };
 
+            console.log('[Notifications] Adding comment notification:', notification);
+
             setNotifications(prev => {
               // Check if notification already exists
               const exists = prev.some(n => n.id === notification.id);
               if (!exists) {
+                console.log('[Notifications] Comment notification added to state');
                 return [notification, ...prev];
               }
+              console.log('[Notifications] Comment notification already exists, skipping');
               return prev;
+            });
+          } else {
+            console.log('[Notifications] Comment not on current user\'s memory or memory not found:', {
+              memoryFound: !!memory,
+              memoryAuthor: memory?.author_id,
+              currentUser: user.id
             });
           }
         }
@@ -265,16 +316,17 @@ export function useNotifications() {
 
     // Cleanup function
     return () => {
-      console.log('Cleaning up notification subscriptions');
+      console.log('[Notifications] Cleaning up notification subscriptions');
       supabase.removeChannel(relationshipChannel);
       supabase.removeChannel(reactionChannel);
       supabase.removeChannel(commentChannel);
     };
-  }, [user, location.pathname]);
+  }, [user]); // REMOVED location.pathname from dependencies
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = (notificationId: string) => {
+    console.log('[Notifications] Marking notification as read:', notificationId);
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === notificationId 
@@ -285,12 +337,14 @@ export function useNotifications() {
   };
 
   const markAllAsRead = () => {
+    console.log('[Notifications] Marking all notifications as read');
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, read: true }))
     );
   };
 
   const removeNotification = (notificationId: string) => {
+    console.log('[Notifications] Removing notification:', notificationId);
     setNotifications(prev => 
       prev.filter(notification => notification.id !== notificationId)
     );
