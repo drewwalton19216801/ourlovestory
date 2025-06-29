@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useRelationships } from './useRelationships';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +25,7 @@ export interface Notification {
 export function useNotifications() {
   const { user } = useAuth();
   const { pendingRequests } = useRelationships();
+  const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Helper function to fetch memory details
@@ -103,7 +105,7 @@ export function useNotifications() {
       const nonRelationshipNotifications = prev.filter(n => n.type !== 'relationship_request');
       return [...nonRelationshipNotifications, ...relationshipNotifications];
     });
-  }, [user, pendingRequests]);
+  }, [user, pendingRequests, location.pathname]);
 
   // Set up real-time subscriptions
   useEffect(() => {
@@ -268,7 +270,7 @@ export function useNotifications() {
       supabase.removeChannel(reactionChannel);
       supabase.removeChannel(commentChannel);
     };
-  }, [user]);
+  }, [user, location.pathname]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

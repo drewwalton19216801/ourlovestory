@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Relationship, UserProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +12,7 @@ export function useRelationships() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const location = useLocation();
 
   const fetchRelationships = async () => {
     if (!user) {
@@ -336,7 +338,7 @@ export function useRelationships() {
 
   useEffect(() => {
     fetchRelationships();
-  }, [user]);
+  }, [user, location.pathname]);
 
   return {
     relationships,
