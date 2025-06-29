@@ -148,7 +148,33 @@ export function MemoryCard({
   };
 
   const handleCommentDelete = (commentId: string) => {
+    console.log('🐛 MemoryCard.handleCommentDelete - Called with:', {
+      memoryId: memory.id,
+      commentId,
+      timestamp: new Date().toISOString()
+    });
     onDeleteComment(memory.id, commentId);
+  };
+
+  const handleAddComment = (content: string) => {
+    console.log('🐛 MemoryCard.handleAddComment - Called with:', {
+      memoryId: memory.id,
+      content,
+      contentType: typeof content,
+      contentLength: content.length,
+      memoryIdType: typeof memory.id,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Additional validation here to catch any issues
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(content)) {
+      console.error('🐛 MemoryCard.handleAddComment - ERROR: Content is a UUID!', content);
+      toast.error('Invalid comment content detected. Please try again.');
+      return;
+    }
+    
+    onComment(memory.id, content);
   };
 
   const closeImageModal = () => {
@@ -389,13 +415,14 @@ export function MemoryCard({
           </div>
         </div>
 
-        {/* Comments Section */}
+        {/* Comments Section - Key prop forces re-initialization */}
         <AnimatePresence>
           {showComments && (
             <CommentSection
+              key={`comments-${memory.id}-${memory.updated_at || memory.created_at}`}
               comments={memory.comments || []}
               currentUser={user}
-              onAddComment={(content) => onComment(memory.id, content)}
+              onAddComment={handleAddComment}
               onDeleteComment={handleCommentDelete}
             />
           )}
