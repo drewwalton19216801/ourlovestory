@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 interface MemoryCardProps {
   memory: Memory;
   onReaction: (memoryId: string, reactionType: 'heart' | 'smile' | 'celebration') => void;
-  onComment: (memoryId: string, content: string) => void;
+  onComment: (content: string) => void; // Updated signature - only content, no memoryId
   onDeleteMemory: (memoryId: string) => void;
   onDeleteComment: (memoryId: string, commentId: string) => void;
   showViewPostLink?: boolean;
@@ -156,13 +156,12 @@ export function MemoryCard({
     onDeleteComment(memory.id, commentId);
   };
 
+  // Fixed: Now only passes content to onComment
   const handleAddComment = (content: string) => {
     console.log('🐛 MemoryCard.handleAddComment - Called with:', {
-      memoryId: memory.id,
       content,
       contentType: typeof content,
       contentLength: content.length,
-      memoryIdType: typeof memory.id,
       timestamp: new Date().toISOString()
     });
     
@@ -174,7 +173,8 @@ export function MemoryCard({
       return;
     }
     
-    onComment(memory.id, content);
+    // Fixed: Only pass content, not memoryId
+    onComment(content);
   };
 
   const closeImageModal = () => {
