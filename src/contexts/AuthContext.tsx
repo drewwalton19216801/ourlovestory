@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { generateVerificationEmail } from '../lib/emailTemplates';
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const sendVerificationEmail = async (user: User, name: string) => {
+  const sendVerificationEmail = useCallback(async (user: User, name: string) => {
     try {
       const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -82,9 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error sending verification email:', error);
       throw new Error('Failed to send verification email. Please try again.');
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -98,9 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       throw new Error('Please verify your email address before signing in. Check your inbox for a verification link.');
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
     // Validate name input
     const trimmedName = name.trim();
     if (!trimmedName || trimmedName.length < 2) {
@@ -145,9 +145,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Account created but failed to send verification email. Please try signing up again.');
       }
     }
-  };
+  }, [sendVerificationEmail]);
 
-  const resendVerification = async (email: string) => {
+  const resendVerification = useCallback(async (email: string) => {
     try {
       // Get user by email (this would need to be done via edge function in production)
       const { data: { users }, error } = await supabase.auth.admin.listUsers();
@@ -170,9 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       throw new Error(error.message || 'Failed to resend verification email.');
     }
-  };
+  }, [sendVerificationEmail]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -199,9 +199,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.location.reload();
       throw error;
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     session,
     loading,
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resendVerification,
-  };
+  }), [user, session, loading, signIn, signUp, signOut, resendVerification]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
