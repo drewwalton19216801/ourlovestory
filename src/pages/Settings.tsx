@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Lock, Users, Eye, User, UserPlus } from 'lucide-react';
+import { Settings as SettingsIcon, Lock, Users, Eye, User, UserPlus, Trash2 } from 'lucide-react';
 import { ProfileSettings } from '../components/Settings/ProfileSettings';
 import { PrivacySettings } from '../components/Settings/PrivacySettings';
 import { PasswordSettings } from '../components/Settings/PasswordSettings';
 import { RelationshipSettings } from '../components/Settings/RelationshipSettings';
 import { InviteFriends } from '../components/Settings/InviteFriends';
+import { AccountDeletionSettings } from '../components/Settings/AccountDeletionSettings';
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'privacy' | 'password' | 'relationships' | 'invite'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'privacy' | 'password' | 'relationships' | 'invite' | 'delete'>('profile');
 
   const tabs = [
     {
@@ -45,6 +46,13 @@ export function Settings() {
       shortLabel: 'Invite',
       icon: UserPlus,
       description: 'Invite friends and family to join'
+    },
+    {
+      id: 'delete' as const,
+      label: 'Delete Account',
+      shortLabel: 'Delete',
+      icon: Trash2,
+      description: 'Permanently delete your account'
     }
   ];
 
@@ -79,7 +87,7 @@ export function Settings() {
                     activeTab === tab.id
                       ? 'text-purple-300 bg-purple-500/20 border-b-2 border-purple-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
+                  } ${tab.id === 'delete' ? 'text-red-400 hover:text-red-300' : ''}`}
                 >
                   <Icon className="h-4 w-4 mb-1" />
                   <span className="text-xs font-medium text-center leading-tight">
@@ -103,8 +111,12 @@ export function Settings() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full text-left p-4 rounded-lg transition-all ${
                       activeTab === tab.id
-                        ? 'bg-purple-500/20 border border-purple-500/30 text-purple-300'
-                        : 'hover:bg-white/5 text-gray-400 hover:text-white'
+                        ? tab.id === 'delete'
+                          ? 'bg-red-500/20 border border-red-500/30 text-red-300'
+                          : 'bg-purple-500/20 border border-purple-500/30 text-purple-300'
+                        : tab.id === 'delete'
+                          ? 'hover:bg-red-500/10 text-red-400 hover:text-red-300'
+                          : 'hover:bg-white/5 text-gray-400 hover:text-white'
                     }`}
                   >
                     <div className="flex items-center space-x-3 mb-1">
@@ -122,12 +134,18 @@ export function Settings() {
           <div className="flex-1 p-4 sm:p-6">
             {/* Mobile Tab Description */}
             <div className="lg:hidden mb-4">
-              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+              <div className={`rounded-lg p-3 border ${
+                activeTab === 'delete' 
+                  ? 'bg-red-500/10 border-red-500/20' 
+                  : 'bg-white/5 border-white/10'
+              }`}>
                 <div className="flex items-center space-x-2">
                   {React.createElement(tabs.find(tab => tab.id === activeTab)?.icon || User, {
-                    className: "h-4 w-4 text-purple-400"
+                    className: `h-4 w-4 ${activeTab === 'delete' ? 'text-red-400' : 'text-purple-400'}`
                   })}
-                  <span className="text-sm text-gray-300">
+                  <span className={`text-sm ${
+                    activeTab === 'delete' ? 'text-red-300' : 'text-gray-300'
+                  }`}>
                     {tabs.find(tab => tab.id === activeTab)?.description}
                   </span>
                 </div>
@@ -146,6 +164,7 @@ export function Settings() {
               {activeTab === 'password' && <PasswordSettings />}
               {activeTab === 'relationships' && <RelationshipSettings />}
               {activeTab === 'invite' && <InviteFriends />}
+              {activeTab === 'delete' && <AccountDeletionSettings />}
             </motion.div>
           </div>
         </div>
