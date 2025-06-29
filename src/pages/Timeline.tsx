@@ -162,7 +162,7 @@ export function Timeline() {
               <MemoryCard
                 memory={memory}
                 onReaction={toggleReaction}
-                onComment={(content) => addComment(memory.id, content)} // Wrap to match new signature
+                onComment={(content) => addComment(memory.id, content)}
                 onDeleteMemory={deleteMemory}
                 onDeleteComment={deleteComment}
               />

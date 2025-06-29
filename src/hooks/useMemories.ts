@@ -185,14 +185,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
     existingImageUrls: string[] = [],
     newlySelectedImageFiles: File[] = []
   ) => {
-    console.log('🐛 useMemories.updateMemory - Called with:', {
-      memoryId,
-      updates,
-      existingImageUrls,
-      newlySelectedImageFiles: newlySelectedImageFiles.map(f => f.name),
-      timestamp: new Date().toISOString()
-    });
-
     try {
       // Find the current memory to get existing images
       const currentMemory = memories.find(m => m.id === memoryId);
@@ -241,8 +233,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
         updated_at: new Date().toISOString()
       };
 
-      console.log('🐛 useMemories.updateMemory - About to update database with:', updateData);
-
       // Update the memory in the database
       const { data, error } = await supabase
         .from('memories')
@@ -257,7 +247,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
         .single();
 
       if (error) {
-        console.error('🐛 useMemories.updateMemory - Database error:', error);
         // Handle foreign key relationship errors during update
         if (error.code === 'PGRST200' && error.message.includes('relationship')) {
           const { data: simpleData, error: simpleError } = await supabase
@@ -284,8 +273,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
         throw error;
       }
 
-      console.log('🐛 useMemories.updateMemory - Database response:', data);
-
       // Update local state
       setMemories(prev => prev.map(memory => 
         memory.id === memoryId ? data : memory
@@ -293,7 +280,6 @@ export function useMemories(publicOnly = false, authorId?: string) {
       
       return data;
     } catch (err) {
-      console.error('🐛 useMemories.updateMemory - Error:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to update memory');
     }
   };
@@ -442,32 +428,15 @@ export function useMemories(publicOnly = false, authorId?: string) {
   const addComment = async (memoryId: string, content: string) => {
     if (!user) return;
 
-    console.log('🐛 useMemories.addComment - Called with:', {
-      memoryId,
-      content,
-      contentType: typeof content,
-      contentLength: content.length,
-      userId: user.id,
-      timestamp: new Date().toISOString()
-    });
-
     // Additional validation to catch any UUID content
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(content)) {
-      console.error('🐛 useMemories.addComment - ERROR: Content is a UUID!', content);
       throw new Error('Invalid comment content detected');
     }
 
     try {
       // Get the user's display name from their profile
       const userName = await getUserDisplayName(user.id);
-
-      console.log('🐛 useMemories.addComment - About to insert comment:', {
-        memory_id: memoryId,
-        user_id: user.id,
-        content,
-        user_name: userName
-      });
 
       const { data, error } = await supabase
         .from('comments')
@@ -481,11 +450,8 @@ export function useMemories(publicOnly = false, authorId?: string) {
         .single();
 
       if (error) {
-        console.error('🐛 useMemories.addComment - Database error:', error);
         throw error;
       }
-
-      console.log('🐛 useMemories.addComment - Database response:', data);
 
       setMemories(prev => prev.map(memory => 
         memory.id === memoryId 
@@ -493,18 +459,11 @@ export function useMemories(publicOnly = false, authorId?: string) {
           : memory
       ));
     } catch (err) {
-      console.error('🐛 useMemories.addComment - Error:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to add comment');
     }
   };
 
   const deleteComment = async (memoryId: string, commentId: string) => {
-    console.log('🐛 useMemories.deleteComment - Called with:', {
-      memoryId,
-      commentId,
-      timestamp: new Date().toISOString()
-    });
-
     try {
       const { error } = await supabase
         .from('comments')
@@ -679,31 +638,14 @@ export function useSingleMemory(memoryId: string | undefined) {
   const addComment = async (content: string) => {
     if (!user || !memory) return;
 
-    console.log('🐛 useSingleMemory.addComment - Called with:', {
-      memoryId: memory.id,
-      content,
-      contentType: typeof content,
-      contentLength: content.length,
-      userId: user.id,
-      timestamp: new Date().toISOString()
-    });
-
     // Additional validation to catch any UUID content
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(content)) {
-      console.error('🐛 useSingleMemory.addComment - ERROR: Content is a UUID!', content);
       throw new Error('Invalid comment content detected');
     }
 
     try {
       const userName = await getUserDisplayName(user.id);
-
-      console.log('🐛 useSingleMemory.addComment - About to insert comment:', {
-        memory_id: memory.id,
-        user_id: user.id,
-        content,
-        user_name: userName
-      });
 
       const { data, error } = await supabase
         .from('comments')
@@ -717,30 +659,20 @@ export function useSingleMemory(memoryId: string | undefined) {
         .single();
 
       if (error) {
-        console.error('🐛 useSingleMemory.addComment - Database error:', error);
         throw error;
       }
-
-      console.log('🐛 useSingleMemory.addComment - Database response:', data);
 
       setMemory(prev => prev ? { 
         ...prev, 
         comments: [...(prev.comments || []), data] 
       } : null);
     } catch (err) {
-      console.error('🐛 useSingleMemory.addComment - Error:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to add comment');
     }
   };
 
   const deleteComment = async (commentId: string) => {
     if (!memory) return;
-
-    console.log('🐛 useSingleMemory.deleteComment - Called with:', {
-      memoryId: memory.id,
-      commentId,
-      timestamp: new Date().toISOString()
-    });
 
     try {
       const { error } = await supabase

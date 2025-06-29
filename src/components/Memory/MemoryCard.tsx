@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 interface MemoryCardProps {
   memory: Memory;
   onReaction: (memoryId: string, reactionType: 'heart' | 'smile' | 'celebration') => void;
-  onComment: (content: string) => void; // Updated signature - only content, no memoryId
+  onComment: (content: string) => void;
   onDeleteMemory: (memoryId: string) => void;
   onDeleteComment: (memoryId: string, commentId: string) => void;
   showViewPostLink?: boolean;
@@ -148,32 +148,17 @@ export function MemoryCard({
   };
 
   const handleCommentDelete = (commentId: string) => {
-    console.log('🐛 MemoryCard.handleCommentDelete - Called with:', {
-      memoryId: memory.id,
-      commentId,
-      timestamp: new Date().toISOString()
-    });
     onDeleteComment(memory.id, commentId);
   };
 
-  // Fixed: Now only passes content to onComment
   const handleAddComment = (content: string) => {
-    console.log('🐛 MemoryCard.handleAddComment - Called with:', {
-      content,
-      contentType: typeof content,
-      contentLength: content.length,
-      timestamp: new Date().toISOString()
-    });
-    
     // Additional validation here to catch any issues
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(content)) {
-      console.error('🐛 MemoryCard.handleAddComment - ERROR: Content is a UUID!', content);
       toast.error('Invalid comment content detected. Please try again.');
       return;
     }
     
-    // Fixed: Only pass content, not memoryId
     onComment(content);
   };
 

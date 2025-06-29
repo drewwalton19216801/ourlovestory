@@ -29,22 +29,9 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
 
     const trimmedComment = newComment.trim();
 
-    // DEBUG: Log comment values before submission
-    console.log('🐛 CommentSection.handleSubmit - DEBUG:', {
-      newComment,
-      trimmedComment,
-      newCommentType: typeof newComment,
-      trimmedCommentType: typeof trimmedComment,
-      newCommentLength: newComment.length,
-      trimmedCommentLength: trimmedComment.length,
-      currentUserId: currentUser?.id,
-      timestamp: new Date().toISOString()
-    });
-
     // Client-side validation: Check if content looks like a UUID
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(trimmedComment)) {
-      console.error('🐛 CommentSection.handleSubmit - UUID DETECTED as comment content:', trimmedComment);
       toast.error('Comment content cannot be a UUID. Please enter a meaningful comment.');
       return;
     }
@@ -57,10 +44,8 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
 
     setIsSubmitting(true);
     try {
-      console.log('🐛 CommentSection.handleSubmit - About to call onAddComment with:', trimmedComment);
       await onAddComment(trimmedComment);
       setNewComment('');
-      console.log('🐛 CommentSection.handleSubmit - Successfully added comment and cleared state');
     } finally {
       setIsSubmitting(false);
     }
@@ -151,16 +136,7 @@ export function CommentSection({ comments, currentUser, onAddComment, onDeleteCo
                 <input
                   type="text"
                   value={newComment}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    console.log('🐛 CommentSection.onChange - Input value changed:', {
-                      oldValue: newComment,
-                      newValue,
-                      valueType: typeof newValue,
-                      timestamp: new Date().toISOString()
-                    });
-                    setNewComment(newValue);
-                  }}
+                  onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."
                   className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm min-w-0"
                   disabled={isSubmitting}

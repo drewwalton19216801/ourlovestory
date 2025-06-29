@@ -174,7 +174,7 @@ export function SingleMemory() {
         <MemoryCard
           memory={memory}
           onReaction={toggleReaction}
-          onComment={addComment} // Now directly passes the function with correct signature
+          onComment={addComment}
           onDeleteMemory={handleDeleteMemory}
           onDeleteComment={handleDeleteComment}
           showViewPostLink={false}
