@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Memory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { deleteImages, extractStoragePath, uploadImages } from '../lib/storage';
+import { deleteImages, extractStoragePath, uploadImages, uploadPlaceholderFile } from '../lib/storage';
 
 export function useMemories(publicOnly = false, authorId?: string) {
   const [memories, setMemories] = useState<Memory[]>([]);
@@ -225,6 +225,20 @@ export function useMemories(publicOnly = false, authorId?: string) {
 
       // Combine existing and new image URLs
       const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+
+      // Check if we need to upload a placeholder file
+      // This happens when: 
+      // 1. We deleted some images (imagesToDelete.length > 0)
+      // 2. The final result has no images (finalImageUrls.length === 0)
+      // 3. We have a valid user ID
+      if (imagesToDelete.length > 0 && finalImageUrls.length === 0 && user?.id) {
+        try {
+          await uploadPlaceholderFile(user.id);
+        } catch (placeholderError) {
+          console.warn('Failed to upload placeholder file:', placeholderError);
+          // Don't fail the entire operation if placeholder upload fails
+        }
+      }
 
       // Prepare the update object
       const updateData = {

@@ -11,6 +11,42 @@ export interface UploadError {
 }
 
 /**
+ * Upload a placeholder file to maintain user's storage folder
+ */
+export async function uploadPlaceholderFile(userId: string): Promise<void> {
+  try {
+    // Create a tiny placeholder file
+    const placeholderContent = new Blob([''], { type: 'text/plain' });
+    const placeholderPath = `${userId}/.keep`;
+
+    // Check if placeholder already exists to avoid unnecessary uploads
+    const { data: existingFile } = await supabase.storage
+      .from('memory-images')
+      .list(userId, {
+        search: '.keep'
+      });
+
+    // Only upload if placeholder doesn't already exist
+    if (!existingFile || existingFile.length === 0) {
+      const { error } = await supabase.storage
+        .from('memory-images')
+        .upload(placeholderPath, placeholderContent, {
+          cacheControl: '3600',
+          upsert: true // Overwrite if exists
+        });
+
+      if (error) {
+        console.warn('Failed to upload placeholder file:', error);
+        // Don't throw error as this is not critical to the main operation
+      }
+    }
+  } catch (error) {
+    console.warn('Error managing placeholder file:', error);
+    // Don't throw error as this is not critical to the main operation
+  }
+}
+
+/**
  * Upload a file to Supabase Storage
  */
 export async function uploadImage(file: File, userId?: string): Promise<UploadResult> {
